@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Space+Grotesk:wght@300;400;500;600&family=Syncopate:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Syncopate", sans-serif;
+  --font-body: "Space Grotesk", sans-serif;
+  --font-accent: "Syne", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+
+  --color-void: #02020a;
+  --color-deep: #06060f;
+  --color-surface: #0b0b1a;
+  --color-glow: #c8b8ff;
+  --color-frost: #e8e0ff;
+  --color-baby-blue: #89CFF0;
+  --color-dust: #9980cc;
+  --color-amber: #f0a855;
+  --color-teal: #4ee8c8;
+  --color-coral: #ff6b6b;
+}
+
+@layer base {
+  body {
+    @apply bg-void text-frost font-body antialiased selection:bg-glow selection:text-void;
+    cursor: none;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 20px var(--color-glow);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
