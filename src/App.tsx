@@ -935,11 +935,11 @@ const Splash = ({ onEnter }: { onEnter: () => void }) => {
             duration: 1.5,
             delay: 2 
           }}
-          whileHover={{ scale: 1.05, letterSpacing: '0.6em', boxShadow: '0 0 20px rgba(137,207,240,0.4)' }}
+          whileHover={{ scale: 1.05, letterSpacing: '0.6em', boxShadow: '0 0 20px rgba(137,207,240,0.5)' }}
           whileTap={{ scale: 0.95 }}
-          className="px-12 py-4 border border-baby-blue/30 font-display text-[0.6rem] tracking-[0.4em] uppercase hover:bg-baby-blue transition-all duration-500 shadow-[0_0_15px_rgba(137,207,240,0.2)]"
+          className="enter-orbit-btn px-12 py-4 border border-baby-blue/30 font-display text-[0.6rem] tracking-[0.4em] uppercase hover:brightness-110 transition-all duration-500 shadow-[0_0_15px_rgba(137,207,240,0.2)]"
         >
-          <span className="chrome">Enter Orbit</span>
+          <span className="chrome font-bold">Enter Orbit</span>
         </motion.button>
       </div>
     </motion.div>

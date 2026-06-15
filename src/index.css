@@ -140,6 +140,28 @@
     animation: sheen 9s ease-in-out infinite;
   }
 
+  .enter-orbit-btn {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .enter-orbit-btn:hover {
+    background: linear-gradient(
+      105deg,
+      #e8e0ff 0%, #89CFF0 30%, #4ee8c8 60%, #89CFF0 85%, #e8e0ff 100%
+    );
+    background-size: 220% 100%;
+    animation: sheen 9s ease-in-out infinite;
+    border-color: transparent !important;
+  }
+
+  .enter-orbit-btn:hover .chrome {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
   @keyframes sola-chrome-flow {
     0% {
       background-position: 0% center;
