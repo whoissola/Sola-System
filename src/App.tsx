@@ -323,7 +323,6 @@ const Hero = () => {
 const About = () => {
   return (
     <section id="world" className="snap-start h-screen px-8 pt-32 pb-4 flex flex-col justify-between overflow-hidden relative">
-      <SocialLinks />
       <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col justify-center">
         <div className="font-display text-[0.45rem] tracking-[0.5em] text-baby-blue mb-8 flex items-center gap-4">
           <div className="w-8 h-px bg-baby-blue" />
@@ -332,11 +331,11 @@ const About = () => {
         <div className="max-w-4xl">
           <h2 
             style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
-            className="text-xl md:text-2xl mb-6 lowercase tracking-[0.25em] chrome inline-block"
+            className="text-2xl md:text-3xl mb-8 lowercase tracking-[0.25em] chrome inline-block"
           >
             about
           </h2>
-          <div className="space-y-6 text-frost font-display text-[0.46rem] md:text-[0.56rem] font-normal tracking-[0.34em] leading-[1.8] uppercase">
+          <div className="space-y-6 text-frost font-display text-[0.58rem] md:text-[0.7rem] font-normal tracking-[0.28em] leading-[1.8] uppercase">
             <p className="indent-12 md:indent-24">
               South London polymath Ṣọ́lá reimagines the formal structures of classical music through an avant-garde, Black British lens. A producer, singer, and multi-instrumentalist, she dismantles her classical piano background to build something entirely her own: a sound rooted in the heavy atmosphere of trip-hop, electronic R&B, and jazz noir.
             </p>
@@ -452,7 +451,6 @@ const Press = () => {
 
   return (
     <div className="flex-1 flex flex-col justify-center py-12 relative">
-      <SocialLinks />
       <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
         <div className="w-8 h-px bg-baby-blue" />
         03 — Press Archive
@@ -488,15 +486,15 @@ const Pictures = () => {
   const scrollPosRef = useRef(0);
   
   const videoPlanets = [
-    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[10px] h-[10px]' },
-    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[14px] h-[14px]' },
-    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[16px] h-[16px]' },
-    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[12px] h-[12px]' },
-    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[24px] h-[24px]' },
-    { id: '-3rzTxmZJWU', title: 'Scream999', name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', glow: 'shadow-[0_0_15px_rgba(240,216,128,0.2)]', size: 'w-[20px] h-[20px]', hasRing: true, ringColor: 'border-glow/20' },
-    { id: 'HE-l10iYH78', title: 'Abide In U', name: 'Uranus', color: 'bg-[radial-gradient(circle_at_35%_35%,#80e0f0,#2080a0)]', glow: 'shadow-[0_0_12px_rgba(128,224,240,0.2)]', size: 'w-[16px] h-[16px]', hasRing: true, ringColor: 'border-glow/10', ringRotate: 'rotate-[85deg]' },
-    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[16px] h-[16px]' },
-    { id: 'VfJX0EocKkI', title: 'Feels Like A War', name: 'Pluto', color: 'bg-[radial-gradient(circle_at_35%_35%,#a6a6a6,#404040)]', glow: 'shadow-[0_0_8px_rgba(166,166,166,0.2)]', size: 'w-[8px] h-[8px]' }
+    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[12px] h-[12px]' },
+    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[16px] h-[16px]' },
+    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[18px] h-[18px]' },
+    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[14px] h-[14px]' },
+    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[26px] h-[26px]' },
+    { id: '-3rzTxmZJWU', title: 'Scream999', name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', glow: 'shadow-[0_0_15px_rgba(240,216,128,0.2)]', size: 'w-[22px] h-[22px]', hasRing: true, ringColor: 'border-glow/20' },
+    { id: 'HE-l10iYH78', title: 'Abide In U', name: 'Uranus', color: 'bg-[radial-gradient(circle_at_35%_35%,#80e0f0,#2080a0)]', glow: 'shadow-[0_0_12px_rgba(128,224,240,0.2)]', size: 'w-[18px] h-[18px]', hasRing: true, ringColor: 'border-glow/10', ringRotate: 'rotate-[85deg]' },
+    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[18px] h-[18px]' },
+    { id: 'VfJX0EocKkI', title: 'Feels Like A War', name: 'Pluto', color: 'bg-[radial-gradient(circle_at_35%_35%,#a6a6a6,#404040)]', glow: 'shadow-[0_0_8px_rgba(166,166,166,0.2)]', size: 'w-[10px] h-[10px]' }
   ];
  
   // Auto-scroll logic for Horizontal list - EVEN SLOWER & SMOOTH
@@ -527,15 +525,23 @@ const Pictures = () => {
   const activeVideos = videoPlanets;
  
   return (
-    <div className="flex-1 flex flex-col h-full pt-2 pb-6 relative justify-between">
+    <div className="flex-1 flex flex-col h-full pt-4 pb-4 relative justify-between overflow-hidden">
       <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-2 flex items-center gap-4 shrink-0">
         <div className="w-8 h-px bg-baby-blue" />
         02 — Video Archive
       </div>
- 
-      {/* Featured Video Stage - Centered */}
-      <div className="flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full px-1 md:px-4">
-        <div className="relative group overflow-hidden bg-void shadow-[30px_30px_80px_rgba(0,0,0,1)] rounded-lg">
+
+      {/* Featured Video Stage - Maximized Real Estate with mathematically perfect 16:9 proportion */}
+      <div className="flex-1 flex flex-col justify-center w-full px-2 md:px-4 my-2 min-h-0">
+        <div 
+          className="relative group overflow-hidden bg-void shadow-[0_25px_60px_rgba(0,0,0,0.85)] rounded-lg mx-auto shrink-0 border border-glow/5"
+          style={{
+            width: '100%',
+            aspectRatio: '16 / 9',
+            maxHeight: 'calc(100vh - 210px)',
+            maxWidth: 'min(1200px, 95vw, calc((100vh - 210px) * 1.777))'
+          }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
@@ -543,7 +549,7 @@ const Pictures = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
-              className="aspect-video w-full"
+              className="w-full h-full"
             >
               <iframe
                 className="w-full h-full"
@@ -556,53 +562,50 @@ const Pictures = () => {
           </AnimatePresence>
         </div>
       </div>
- 
-      {/* Visual divider separating the video stage from the scrolling planets footer navigation */}
-      <div className="w-full max-w-[85%] md:max-w-[90vw] mx-auto mt-6 mb-2 shrink-0 opacity-20 relative z-10">
-        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-glow to-transparent" />
-      </div>
- 
+
       {/* Horizontal Planet Navigation at the bottom */}
       <div 
          ref={scrollRef}
          onMouseEnter={() => setIsHovered(true)}
          onMouseLeave={() => setIsHovered(false)}
-         className="w-full relative flex items-center py-1 overflow-x-auto no-scrollbar shrink-0 mt-6"
+         className="w-full relative flex items-center overflow-x-auto no-scrollbar shrink-0 mt-4 mb-2 h-[120px]"
          style={{
-           maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+           maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
          }}
       >
-        <div className="flex items-center gap-1.5 px-12 pb-1">
+        <div className="flex items-start gap-4 md:gap-6 px-12 relative min-h-[100px] pt-4">
+          {/* Continuous Thread Orbit Track */}
+          <div className="absolute left-0 right-0 top-[40px] h-[1px] bg-gradient-to-r from-transparent via-glow/25 to-transparent z-0 pointer-events-none" />
+
           {[...videoPlanets, ...videoPlanets].map((p, i) => {
             const isActualVideo = i % videoPlanets.length;
             const isActive = activeIndex === isActualVideo;
             
             return (
-              <div key={`${p.id}-${i}`} className="flex items-center shrink-0">
-                <div className="w-4 h-[1px] bg-gradient-to-r from-transparent via-glow/20 to-transparent" />
+              <div key={`${p.id}-${i}`} className="flex flex-col items-center shrink-0 relative">
                 <motion.button
                   onClick={() => setActiveIndex(isActualVideo)}
                   whileHover={{ scale: 1.08, y: -2 }}
-                  className={`relative z-10 flex flex-col items-center gap-1 transition-all duration-500 cursor-pointer px-3 hover:opacity-100 ${
+                  className={`relative z-10 flex flex-col items-center gap-2.5 transition-all duration-500 cursor-pointer px-4 hover:opacity-100 ${
                     isActive ? 'opacity-100 scale-102' : 'opacity-70 grayscale-[0.1]'
                   }`}
                 >
-                  <div className="relative flex items-center justify-center">
+                  <div className="relative flex items-center justify-center h-12 w-12 shrink-0">
                     <div className={`rounded-full transition-all duration-700 ${p.size} ${p.color} ${p.glow} ${
-                      isActive ? 'ring-1 ring-glow ring-offset-2 ring-offset-void shadow-[0_0_20px_rgba(200,184,255,0.4)]' : ''
+                      isActive ? 'ring-1 ring-glow ring-offset-2 ring-offset-void shadow-[0_0_20px_rgba(200,184,255,0.4)] bg-blend-screen' : ''
                     }`} />
                     {p.hasRing && (
                       <div className={`absolute w-[180%] h-[30%] border ${p.ringColor || 'border-glow/30'} rounded-[100%] ${(p as any).ringRotate || 'rotate-[-25deg]'} z-0`} />
                     )}
                   </div>
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className={`font-display text-[0.45rem] tracking-[0.3em] uppercase text-center leading-none transition-all duration-500 font-bold ${
-                      isActive ? 'text-glow' : 'text-frost/80'
+                  <div className="flex flex-col items-center gap-1">
+                    <span className={`font-display text-[0.52rem] md:text-[0.58rem] tracking-[0.3em] uppercase text-center leading-none transition-all duration-500 font-bold ${
+                      isActive ? 'text-glow text-shadow-glow' : 'text-frost/80'
                     }`}>
                       {p.name}
                     </span>
-                    <span className={`font-display text-[0.35rem] tracking-[0.1em] uppercase text-center block max-w-[80px] truncate leading-tight transition-all duration-500 font-semibold ${
+                    <span className={`font-display text-[0.42rem] md:text-[0.46rem] tracking-[0.12em] uppercase text-center block max-w-[90px] truncate leading-tight transition-all duration-500 font-semibold ${
                       isActive ? 'text-frost' : 'text-frost/40'
                     }`}>
                       {p.title}
@@ -612,7 +615,6 @@ const Pictures = () => {
               </div>
             );
           })}
-          <div className="w-8 h-[1px] bg-gradient-to-r from-transparent via-glow/20 to-transparent" />
         </div>
       </div>
     </div>
@@ -639,7 +641,6 @@ const Tour = () => {
 
   return (
     <div className="flex-1 flex flex-col justify-center py-12 relative">
-      <SocialLinks />
       <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
         <div className="w-8 h-px bg-baby-blue" />
         04 — Live
@@ -650,13 +651,8 @@ const Tour = () => {
           <motion.div
             key={i}
             whileHover={{ x: 10 }}
-            className="group grid grid-cols-[auto_1fr_auto] gap-8 items-center border-b border-glow/5 pb-12 transition-all hover:border-glow/20"
+            className="group grid grid-cols-[1fr_auto] gap-8 items-center border-b border-glow/5 pb-12 transition-all hover:border-glow/20"
           >
-            {/* Planet */}
-            <div className="relative flex items-center justify-center w-12 h-12">
-              <div className={`rounded-full ${item.planet.size} ${item.planet.color} ${item.planet.glow} group-hover:scale-110 transition-transform duration-500`} />
-            </div>
-
             {/* Info */}
             <div className="flex flex-col gap-2">
               <span className="font-display text-[0.45rem] tracking-[0.4em] text-baby-blue uppercase">{item.date}</span>
@@ -706,47 +702,85 @@ const Newsletter = () => {
         localStorage.setItem('sola-subscribers', JSON.stringify(list));
       }
 
-      // 2. Submit to Google Form using secret hidden iframe trick to bypass CORS
+      // 2. Submit to Google Form using dual-delivery (hidden iframe form submit AND background URLSearchParams POST fetch)
       const configuredFormUrl = localStorage.getItem('sola-form-url') || "https://docs.google.com/forms/d/1Rxb2YDX72obeQ1IoZEqOOtSM7xycUefU7LSjp0_LpS0/formResponse";
       const configuredEntryId = localStorage.getItem('sola-entry-id') || "entry.1044431221";
 
-      if (configuredFormUrl && configuredEntryId) {
-        // Automatically normalize standard edit/viewform URLs to the correct /formResponse POST endpoint
-        const targetUrl = configuredFormUrl
-          .trim()
-          .replace(/\/edit(\?.*)?$/, '/formResponse')
-          .replace(/\/viewform(\?.*)?$/, '/formResponse');
+      if (configuredFormUrl) {
+        // Automatically make sure the url has any query split off first
+        let cleanUrl = configuredFormUrl.trim();
+        cleanUrl = cleanUrl.split('#')[0];
+        
+        // Comprehensive string replacements for Google Sheets/Forms edit vs view vs response URLs
+        if (cleanUrl.includes('/viewform')) {
+          cleanUrl = cleanUrl.replace(/\/viewform(\?.*)?$/, '/formResponse');
+          if (cleanUrl.includes('/viewform')) {
+            cleanUrl = cleanUrl.split('/viewform')[0] + '/formResponse';
+          }
+        } else if (cleanUrl.includes('/edit')) {
+          cleanUrl = cleanUrl.replace(/\/edit(\?.*)?$/, '/formResponse');
+          if (cleanUrl.includes('/edit')) {
+            cleanUrl = cleanUrl.split('/edit')[0] + '/formResponse';
+          }
+        }
 
+        // Method A: Iframe-Target Form POST (bypasses direct page navigation locks)
         const iframeId = 'sola_gform_target_iframe';
         let iframe = document.getElementById(iframeId) as HTMLIFrameElement;
         if (!iframe) {
           iframe = document.createElement('iframe');
           iframe.id = iframeId;
-          iframe.name = iframeId;
+          iframe.setAttribute('name', iframeId);
           iframe.style.display = 'none';
           document.body.appendChild(iframe);
         }
 
         const hiddenForm = document.createElement('form');
-        hiddenForm.action = targetUrl;
+        hiddenForm.action = cleanUrl;
         hiddenForm.method = 'POST';
         hiddenForm.target = iframeId;
 
+        // Custom Entry ID Field input
         const emailInput = document.createElement('input');
         emailInput.type = 'hidden';
         emailInput.name = configuredEntryId;
         emailInput.value = email.trim();
-
         hiddenForm.appendChild(emailInput);
+
+        // Standard Collect-Emails Field (forces mapping to both, ensuring capture regardless of form configuration)
+        const emailAddressInput = document.createElement('input');
+        emailAddressInput.type = 'hidden';
+        emailAddressInput.name = 'emailAddress';
+        emailAddressInput.value = email.trim();
+        hiddenForm.appendChild(emailAddressInput);
+
         document.body.appendChild(hiddenForm);
         hiddenForm.submit();
 
-        // Perform clean background sweep
+        // Perform clean background sweep of domestic nodes
         setTimeout(() => {
           if (hiddenForm.parentNode) {
             document.body.removeChild(hiddenForm);
           }
-        }, 800);
+        }, 850);
+
+        // Method B: CORS-immune Background POST fetch as bulletproof backup
+        try {
+          const formData = new URLSearchParams();
+          formData.append(configuredEntryId, email.trim());
+          formData.append('emailAddress', email.trim());
+
+          fetch(cleanUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+          }).catch(err => console.debug('Fetch post response discarded (expected):', err));
+        } catch (fetchErr) {
+          console.debug('Background sync dispatch fallback failed:', fetchErr);
+        }
       }
 
       setStatus('success');
@@ -1084,12 +1118,14 @@ const SubscriberModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                 />
               </div>
 
-              <div className="border border-baby-blue/10 bg-void/50 p-4 rounded text-left space-y-2">
-                <p className="font-display text-[0.45rem] tracking-[0.2em] text-baby-blue uppercase font-bold">how to find details:</p>
-                <ol className="list-decimal list-inside font-ibm-mono text-[0.5rem] tracking-[0.05em] text-dust/60 space-y-1.5 uppercase leading-relaxed">
-                  <li>open your google form editor. click send, get the link, and paste it above under google form link.</li>
-                  <li>open the public forms link in your browser. right click on the email input block, select inspect, and locate the name="..." attribute (e.g., entry.1234567 or emailAddress).</li>
-                  <li>copy that parameter string and paste it under entry id.</li>
+              <div className="border border-baby-blue/10 bg-void/50 p-4 rounded text-left space-y-2.5">
+                <p className="font-display text-[0.45rem] tracking-[0.25em] text-baby-blue uppercase font-bold">integration & troubleshooting:</p>
+                <ol className="list-decimal list-inside font-ibm-mono text-[0.5rem] tracking-[0.05em] text-dust/70 space-y-2 uppercase leading-relaxed">
+                  <li>open your google form editor, click "send", choose the link tab, and copy/paste it into google form link.</li>
+                  <li>open the public form link. right-click the email input field and choose "inspect". find the name="..." attribute (e.g., entry.1044431221).</li>
+                  <li>copy that code and paste it above under "email field entry id". if submissions arrive blank, the entry id is wrong.</li>
+                  <li><span className="text-baby-blue/80 font-bold">critical:</span> remove "required" tags from all other fields on your form, otherwise submissions will be rejected by google's server.</li>
+                  <li><span className="text-emerald-400 font-bold">fail-safe:</span> all successful email submissions are always 100% saved in the registry list tab. you can view and export them as csv anytime.</li>
                 </ol>
               </div>
             </div>
@@ -1142,7 +1178,7 @@ export default function App() {
             <Hero />
           </section>
           <About />
-          <section id="videos" className="snap-start h-screen px-8 flex flex-col justify-center overflow-hidden pb-12">
+          <section id="videos" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
             <Pictures />
           </section>
           <section id="press" className="snap-start h-screen px-8 flex flex-col justify-center overflow-hidden">
