@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Space+Grotesk:wght@300;400;500;600&family=Syncopate:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=IBM+Plex+Mono:ital,wght@1,300&family=Space+Grotesk:wght@300;400;500;600&family=Syncopate:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,10 +6,11 @@
   --font-body: "Space Grotesk", sans-serif;
   --font-accent: "Syne", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
+  --font-ibm-mono: "IBM Plex Mono", monospace;
 
-  --color-void: #02020a;
-  --color-deep: #06060f;
-  --color-surface: #0b0b1a;
+  --color-void: #000000;
+  --color-deep: #000000;
+  --color-surface: #05050a;
   --color-glow: #c8b8ff;
   --color-frost: #e8e0ff;
   --color-baby-blue: #89CFF0;
@@ -42,5 +43,114 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .chrome {
+    background: linear-gradient(
+      105deg,
+      #f4f6f8 0%, #9fb2c4 18%, #f8fbff 32%,
+      #6fc3ff 48%, #d7e3ee 60%, #8094a8 78%, #f4f6f8 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sheen 9s ease-in-out infinite;
+  }
+
+  .chrome-purple {
+    background: linear-gradient(
+      105deg,
+      #c8b8ff 0%, #9980cc 25%, #e8e0ff 50%, #9980cc 75%, #c8b8ff 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sheen 9s ease-in-out infinite;
+  }
+
+  .chrome-blue-lilac {
+    background: linear-gradient(
+      105deg,
+      #c8b8ff 0%,
+      #89CFF0 20%,
+      #b099ff 45%,
+      #89CFF0 70%,
+      #e2d9ff 85%,
+      #c8b8ff 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sheen 9s ease-in-out infinite;
+  }
+
+  .chrome-blue-lilac-slow {
+    background: linear-gradient(
+      120deg,
+      #c8b8ff 0%,
+      #89CFF0 25%,
+      #3174f1 50%,
+      #89CFF0 75%,
+      #c8b8ff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sola-chrome-flow 5s linear infinite;
+  }
+
+  .chrome-ice {
+    background: linear-gradient(
+      105deg,
+      #e8e0ff 0%, #89CFF0 30%, #4ee8c8 60%, #89CFF0 85%, #e8e0ff 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sheen 9s ease-in-out infinite;
+  }
+
+  .chrome-ice-clean {
+    background: linear-gradient(
+      120deg,
+      #89CFF0 0%,
+      #c8b8ff 25%,
+      #3174f1 50%,
+      #89CFF0 75%,
+      #c8b8ff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+    animation: sola-chrome-flow 5s linear infinite;
+  }
+
+  .bg-chrome-ice {
+    background: linear-gradient(
+      105deg,
+      #e8e0ff 0%, #89CFF0 30%, #4ee8c8 60%, #89CFF0 85%, #e8e0ff 100%
+    );
+    background-size: 220% 100%;
+    animation: sheen 9s ease-in-out infinite;
+  }
+
+  @keyframes sola-chrome-flow {
+    0% {
+      background-position: 0% center;
+    }
+    100% {
+      background-position: -200% center;
+    }
+  }
+
+  @keyframes sheen {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
   }
 }

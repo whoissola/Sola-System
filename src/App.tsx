@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
 import { Play, Ticket, Mail, Instagram, Youtube, Music as MusicIcon, Disc, ExternalLink, ChevronDown } from 'lucide-react';
 
@@ -32,7 +32,7 @@ const Starfield = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let stars: { x: number; y: number; r: number; o: number; speed: number; pulse: number; layer: number }[] = [];
+    let stars: { x: number; y: number; z: number; r: number; o: number; pulse: number; colorBase: string }[] = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -42,17 +42,24 @@ const Starfield = () => {
 
     const createStars = () => {
       stars = [];
-      const count = Math.floor((canvas.width * canvas.height) / 1500); // More stars
+      const count = Math.floor((canvas.width * canvas.height) / 2500); // More spaced out
       for (let i = 0; i < count; i++) {
-        const layer = Math.floor(Math.random() * 8); // 8 layers for more depth
+        const colRand = Math.random();
+        let colorBase = 'rgba(255, 255, 255, '; // white
+        if (colRand < 0.45) {
+          colorBase = 'rgba(137, 207, 240, '; // icy baby-blue
+        } else if (colRand < 0.8) {
+          colorBase = 'rgba(200, 184, 255, '; // lilac
+        }
+
         stars.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          r: Math.random() * (layer * 0.2 + 0.4),
-          o: Math.random() * 0.8 + 0.1,
-          speed: (layer + 1) * 0.015, // Slower, more subtle movement
+          x: (Math.random() - 0.5) * 3000,
+          y: (Math.random() - 0.5) * 3000,
+          z: Math.random() * 1000 + 1,
+          r: Math.random() * 1.5 + 0.4,
+          o: Math.random() * 0.7 + 0.3,
           pulse: Math.random() * Math.PI * 2,
-          layer
+          colorBase
         });
       }
     };
@@ -71,7 +78,7 @@ const Starfield = () => {
     };
 
     const draw = () => {
-      ctx.fillStyle = '#02020a';
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Subtle nebula glow
@@ -81,41 +88,60 @@ const Starfield = () => {
       const nebulaGradient = ctx.createRadialGradient(nebulaX, nebulaY, 0, nebulaX, nebulaY, canvas.width * 0.7);
       nebulaGradient.addColorStop(0, 'rgba(30, 15, 60, 0.12)');
       nebulaGradient.addColorStop(0.5, 'rgba(15, 8, 40, 0.04)');
-      nebulaGradient.addColorStop(1, 'rgba(2, 2, 10, 0)');
+      nebulaGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = nebulaGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Mouse look angles (yaw/pitch)
+      const mouseYaw = mouseRef.current.x * 0.4;
+      const mousePitch = mouseRef.current.y * 0.4;
+      
+      const cosY = Math.cos(mouseYaw);
+      const sinY = Math.sin(mouseYaw);
+      const cosX = Math.cos(mousePitch);
+      const sinX = Math.sin(mousePitch);
+
       stars.forEach((s) => {
-        s.pulse += 0.005;
-        const opacity = s.o * (0.6 + 0.4 * Math.sin(s.pulse));
-        
-        // Automatic slow drift with layer-based speed for 3D feel
-        s.x += s.speed * 0.2;
-        s.y += s.speed * 0.1;
+        // Slow movement forward along Z
+        s.z -= 0.6;
 
-        // Wrap around screen
-        if (s.x > canvas.width) s.x = 0;
-        if (s.x < 0) s.x = canvas.width;
-        if (s.y > canvas.height) s.y = 0;
-        if (s.y < 0) s.y = canvas.height;
+        // Wrap around depth
+        if (s.z <= 0) {
+          s.z = 1000;
+          s.x = (Math.random() - 0.5) * 3000;
+          s.y = (Math.random() - 0.5) * 3000;
+        }
 
-        // Mouse parallax - stronger on closer layers
-        const mouseShiftX = mouseRef.current.x * (s.layer + 1) * 25;
-        const mouseShiftY = mouseRef.current.y * (s.layer + 1) * 25;
+        // Apply interactive 3D rotation based on mouse orientation
+        // Spin around Y axis (Yaw)
+        let rx = s.x * cosY - s.z * sinY;
+        let rz = s.x * sinY + s.z * cosY;
 
-        // Scroll parallax - stronger on closer layers
-        const scrollShiftY = scrollYRef.current * (s.layer + 1) * 0.05;
+        // Spin around X axis (Pitch)
+        let ry = s.y * cosX - rz * sinX;
+        rz = s.y * sinX + rz * cosX;
 
-        let x = (s.x + mouseShiftX) % canvas.width;
-        if (x < 0) x += canvas.width;
-        
-        let y = (s.y + mouseShiftY - scrollShiftY) % canvas.height;
-        if (y < 0) y += canvas.height;
+        // Perspective scaling
+        const fov = 600;
+        const scale = fov / (fov + rz);
 
-        ctx.beginPath();
-        ctx.arc(x, y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 184, 255, ${opacity})`;
-        ctx.fill();
+        // Calculate screen positions
+        const screenX = canvas.width / 2 + rx * scale;
+        // Shift stars vertically based on scroll offset & depth factors
+        const scrollFactor = scrollYRef.current * 0.15 * (1.5 - rz / 1000);
+        const screenY = canvas.height / 2 + ry * scale - scrollFactor;
+
+        const size = s.r * scale * 1.25;
+
+        if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
+          s.pulse += 0.01;
+          const opacity = s.o * (0.6 + 0.4 * Math.sin(s.pulse)) * (1.0 - rz / 1200);
+
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+          ctx.fillStyle = `${s.colorBase}${opacity})`;
+          ctx.fill();
+        }
       });
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -183,13 +209,13 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] px-8 py-8 flex justify-between items-center">
       <div className="absolute inset-0 bg-gradient-to-b from-void/80 to-transparent pointer-events-none" />
-      <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] text-glow drop-shadow-[0_0_10px_rgba(200,184,255,0.8)] hover:scale-105 transition-transform duration-300">ṢỌLÁ</a>
+      <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] hover:scale-105 transition-transform duration-300 chrome bg-clip-text font-bold">ṢỌ́LÁ</a>
       <ul className="relative hidden md:flex gap-12 list-none items-center">
-        {['VIDEOS', 'PRESS', 'LIVE', 'CONTACT', 'BIO'].map((item) => (
+        {['VIDEOS', 'PRESS', 'LIVE', 'CONTACT', 'ABOUT'].map((item) => (
           <li key={item}>
             <a
-              href={`#${item.toLowerCase() === 'bio' ? 'world' : item.toLowerCase() === 'contact' ? 'newsletter' : item.toLowerCase()}`}
-              className="font-display text-[0.55rem] tracking-[0.3em] text-dust hover:text-frost transition-colors uppercase"
+              href={`#${item.toLowerCase() === 'about' ? 'world' : item.toLowerCase() === 'contact' ? 'newsletter' : item.toLowerCase()}`}
+              className="font-display text-[0.55rem] tracking-[0.3em] text-baby-blue hover:text-white transition-all duration-300 uppercase animate-pulse-slow font-normal"
             >
               {item}
             </a>
@@ -271,7 +297,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
-          className="font-serif italic text-[1.75rem] md:text-[2.75rem] tracking-[0.2em] text-glow drop-shadow-[0_0_15px_rgba(200,184,255,0.4)]"
+          className="font-serif italic text-[1.75rem] md:text-[2.75rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(200,184,255,0.4)] chrome-blue-lilac-slow bg-clip-text"
         >
           welcome to the sola system
         </motion.h1>
@@ -299,20 +325,23 @@ const About = () => {
     <section id="world" className="snap-start h-screen px-8 pt-32 pb-4 flex flex-col justify-between overflow-hidden relative">
       <SocialLinks />
       <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col justify-center">
-        <div className="font-display text-[0.45rem] tracking-[0.5em] text-dust mb-8 flex items-center gap-4">
-          <div className="w-8 h-px bg-dust" />
+        <div className="font-display text-[0.45rem] tracking-[0.5em] text-baby-blue mb-8 flex items-center gap-4">
+          <div className="w-8 h-px bg-baby-blue" />
           01 — The Artist
         </div>
         <div className="max-w-4xl">
-          <h2 className="font-accent text-4xl md:text-5xl font-extrabold leading-[0.75] text-glow mb-10 uppercase tracking-tighter drop-shadow-[0_0_20px_rgba(200,184,255,0.2)]">
-            Bio
+          <h2 
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
+            className="text-xl md:text-2xl mb-6 lowercase tracking-[0.25em] chrome inline-block"
+          >
+            about
           </h2>
-          <div className="space-y-6 text-dust/70 font-display text-[0.55rem] md:text-[0.7rem] font-normal tracking-[0.25em] leading-relaxed uppercase">
+          <div className="space-y-6 text-frost font-display text-[0.46rem] md:text-[0.56rem] font-normal tracking-[0.34em] leading-[1.8] uppercase">
             <p className="indent-12 md:indent-24">
-              South London polymath Sola reimagines the formal structures of classical music through an avant-garde, Black British lens. A producer, singer, and multi-instrumentalist, she dismantles her classical piano background to build something entirely her own: a sound rooted in the heavy atmosphere of trip-hop, electronic R&B, and jazz noir.
+              South London polymath Ṣọ́lá reimagines the formal structures of classical music through an avant-garde, Black British lens. A producer, singer, and multi-instrumentalist, she dismantles her classical piano background to build something entirely her own: a sound rooted in the heavy atmosphere of trip-hop, electronic R&B, and jazz noir.
             </p>
             <p>
-              Following her 2023 mixtape Warped Soul and a "One to Watch" nod from The Guardian, Sola’s artistry has earned the respect of both legends and the new vanguard. Her work has caught the attention of Elton John and Doechii, and led to collaborations with Kid Cudi and Jeymes Samuel on The Book of Clarence soundtrack. Her versatility as a performer is equally notable, having been hand-picked to open for Sabrina Carpenter, proving her ability to translate an experimental, moody sound to major stages.
+              Following her 2023 mixtape Warped Soul and a "One to Watch" nod from The Guardian, Ṣọ́lá's artistry has earned the respect of both legends and the new vanguard. Her work has caught the attention of Elton John and Doechii, and led to collaborations with Kid Cudi and Jeymes Samuel on The Book of Clarence soundtrack. Her versatility as a performer is equally notable, having been hand-picked to open for Sabrina Carpenter, proving her ability to translate an experimental, moody sound to major stages.
             </p>
           </div>
         </div>
@@ -403,13 +432,13 @@ const Press = () => {
   const articles = [
     { 
       source: 'The Guardian', 
-      title: 'One to Watch: Sola | Music', 
+      title: 'One to Watch: Ṣọ́lá | Music', 
       date: 'Sep 2023',
       url: 'https://www.theguardian.com/music/2023/sep/23/one-to-watch-sola-warped-soul'
     },
     { 
       source: 'Clash Magazine', 
-      title: 'Solas Warped Soul Salutes The Tapestry Of Black British Creativity', 
+      title: "Ṣọ́lá's Warped Soul Salutes The Tapestry Of Black British Creativity", 
       date: 'Nov 2023',
       url: 'https://www.clashmusic.com/news/solas-warped-soul-salutes-the-tapestry-of-black-british-creativity/'
     },
@@ -424,8 +453,8 @@ const Press = () => {
   return (
     <div className="flex-1 flex flex-col justify-center py-12 relative">
       <SocialLinks />
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-dust mb-16 flex items-center gap-4">
-        <div className="w-8 h-px bg-dust" />
+      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
+        <div className="w-8 h-px bg-baby-blue" />
         03 — Press Archive
       </div>
       <div className="max-w-4xl mx-auto w-full space-y-12">
@@ -439,8 +468,8 @@ const Press = () => {
             className="group block border-b border-glow/5 pb-10 transition-all hover:border-glow/20"
           >
             <div className="flex justify-between items-end mb-4">
-              <span className="font-display text-[0.45rem] tracking-[0.4em] text-glow uppercase">{article.source}</span>
-              <span className="font-display text-[0.4rem] tracking-[0.2em] text-frost/40 uppercase">{article.date}</span>
+              <span className="font-display text-[0.45rem] tracking-[0.4em] text-baby-blue uppercase">{article.source}</span>
+              <span className="font-display text-[0.4rem] tracking-[0.2em] text-baby-blue/50 uppercase">{article.date}</span>
             </div>
             <h3 className="font-display text-[0.6rem] md:text-[0.8rem] text-frost uppercase tracking-[0.25em] leading-relaxed">
               {article.title}
@@ -459,128 +488,131 @@ const Pictures = () => {
   const scrollPosRef = useRef(0);
   
   const videoPlanets = [
-    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-6 h-6' },
-    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-10 h-10' },
-    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-12 h-12' },
-    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-8 h-8' },
-    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-14 h-14' },
-    { id: '-3rzTxmZJWU', title: 'Scream999', name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', glow: 'shadow-[0_0_15px_rgba(240,216,128,0.2)]', size: 'w-12 h-12', hasRing: true, ringColor: 'border-glow/20' },
-    { id: 'HE-l10iYH78', title: 'Abide In U', name: 'Uranus', color: 'bg-[radial-gradient(circle_at_35%_35%,#80e0f0,#2080a0)]', glow: 'shadow-[0_0_12px_rgba(128,224,240,0.2)]', size: 'w-10 h-10', hasRing: true, ringColor: 'border-glow/10', ringRotate: 'rotate-[85deg]' },
-    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-10 h-10' },
-    { id: 'VfJX0EocKkI', title: 'Feels Like A War', name: 'Pluto', color: 'bg-[radial-gradient(circle_at_35%_35%,#a6a6a6,#404040)]', glow: 'shadow-[0_0_8px_rgba(166,166,166,0.2)]', size: 'w-5 h-5' }
+    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[10px] h-[10px]' },
+    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[14px] h-[14px]' },
+    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[16px] h-[16px]' },
+    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[12px] h-[12px]' },
+    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[24px] h-[24px]' },
+    { id: '-3rzTxmZJWU', title: 'Scream999', name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', glow: 'shadow-[0_0_15px_rgba(240,216,128,0.2)]', size: 'w-[20px] h-[20px]', hasRing: true, ringColor: 'border-glow/20' },
+    { id: 'HE-l10iYH78', title: 'Abide In U', name: 'Uranus', color: 'bg-[radial-gradient(circle_at_35%_35%,#80e0f0,#2080a0)]', glow: 'shadow-[0_0_12px_rgba(128,224,240,0.2)]', size: 'w-[16px] h-[16px]', hasRing: true, ringColor: 'border-glow/10', ringRotate: 'rotate-[85deg]' },
+    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[16px] h-[16px]' },
+    { id: 'VfJX0EocKkI', title: 'Feels Like A War', name: 'Pluto', color: 'bg-[radial-gradient(circle_at_35%_35%,#a6a6a6,#404040)]', glow: 'shadow-[0_0_8px_rgba(166,166,166,0.2)]', size: 'w-[8px] h-[8px]' }
   ];
-
-  // Auto-scroll logic for Vertical sidebar - EVEN SLOWER & SMOOTH
+ 
+  // Auto-scroll logic for Horizontal list - EVEN SLOWER & SMOOTH
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
-
+ 
     let animationFrameId: number;
     const scroll = () => {
       if (!isHovered) {
         scrollPosRef.current += 0.25; // Slower controlled drift
-        scrollContainer.scrollTop = Math.floor(scrollPosRef.current);
+        scrollContainer.scrollLeft = Math.floor(scrollPosRef.current);
         
-        if (scrollContainer.scrollTop >= scrollContainer.scrollHeight / 2) {
+        if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
           scrollPosRef.current = 0;
-          scrollContainer.scrollTop = 0;
+          scrollContainer.scrollLeft = 0;
         }
       } else {
-        scrollPosRef.current = scrollContainer.scrollTop;
+        scrollPosRef.current = scrollContainer.scrollLeft;
       }
       animationFrameId = requestAnimationFrame(scroll);
     };
-
+ 
     animationFrameId = requestAnimationFrame(scroll);
     return () => cancelAnimationFrame(animationFrameId);
   }, [isHovered]);
-
+ 
   const activeVideos = videoPlanets;
-
+ 
   return (
-    <div className="flex-1 flex flex-col h-full pt-4 pb-12 relative">
-      <SocialLinks />
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-frost mb-4 flex items-center gap-4">
-        <div className="w-8 h-px bg-frost" />
+    <div className="flex-1 flex flex-col h-full pt-2 pb-6 relative justify-between">
+      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-2 flex items-center gap-4 shrink-0">
+        <div className="w-8 h-px bg-baby-blue" />
         02 — Video Archive
       </div>
-
-      <div className="flex flex-1 gap-4 md:gap-6 items-center overflow-hidden min-h-[500px] flex-col md:flex-row">
-        {/* Vertical Orbit Sidebar - LEFT Side & Compact (w-20) */}
-        <div 
-          ref={scrollRef}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="hidden md:flex flex-col h-[550px] overflow-y-auto no-scrollbar relative w-20 shrink-0"
-          style={{
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)'
-          }}
-        >
-          <div className="flex flex-col items-center gap-0 min-h-max pb-32">
-            {[...videoPlanets, ...videoPlanets].map((p, i) => {
-              const isActualVideo = i % videoPlanets.length;
-              const isActive = activeIndex === isActualVideo;
-              
-              return (
-                <div key={`${p.id}-${i}`} className="flex flex-col items-center">
-                  <div className="w-[1px] bg-gradient-to-b from-transparent via-glow/20 to-transparent h-8" />
-                  <motion.button
-                    onClick={() => setActiveIndex(isActualVideo)}
-                    whileHover={{ scale: 1.1, x: 2 }}
-                    className={`relative z-10 flex flex-col items-center gap-2 transition-all duration-500 cursor-pointer hover:opacity-100 ${
-                      isActive ? 'opacity-100 scale-105' : 'opacity-80 grayscale-[0.2]'
-                    }`}
-                  >
-                    <div className="relative flex items-center justify-center">
-                      <div className={`rounded-full transition-all duration-700 ${p.size} ${p.color} ${p.glow} ${
-                        isActive ? 'ring-1 ring-glow ring-offset-2 ring-offset-void shadow-[0_0_20px_rgba(200,184,255,0.4)]' : ''
-                      }`} />
-                      {p.hasRing && (
-                        <div className={`absolute w-[180%] h-[30%] border ${p.ringColor || 'border-glow/30'} rounded-[100%] ${(p as any).ringRotate || 'rotate-[-25deg]'} z-0`} />
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center gap-1.5">
-                      <span className={`font-display text-[0.55rem] tracking-[0.4em] uppercase text-center leading-none transition-all duration-500 font-bold ${
-                        isActive ? 'text-glow' : 'text-frost'
-                      }`}>
-                        {p.name}
-                      </span>
-                      <span className={`font-display text-[0.45rem] tracking-[0.2em] uppercase text-center block max-w-[80px] leading-tight transition-all duration-500 font-semibold ${
-                        isActive ? 'text-frost' : 'text-frost/80'
-                      }`}>
-                        - {p.title}
-                      </span>
-                    </div>
-                  </motion.button>
-                </div>
-              );
-            })}
-          </div>
+ 
+      {/* Featured Video Stage - Centered */}
+      <div className="flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full px-1 md:px-4">
+        <div className="relative group overflow-hidden bg-void shadow-[30px_30px_80px_rgba(0,0,0,1)] rounded-lg">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="aspect-video w-full"
+            >
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${activeVideos[activeIndex].id}?modestbranding=1&rel=0&showinfo=0&color=white&autoplay=0`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                frameBorder="0"
+              />
+            </motion.div>
+          </AnimatePresence>
         </div>
-
-        {/* Featured Video Stage - Full Width minus Sidebar */}
-        <div className="flex-1 flex flex-col h-full justify-center">
-          <div className="relative group overflow-hidden bg-void shadow-[30px_30px_80px_rgba(0,0,0,1)]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="aspect-video w-full"
-              >
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${activeVideos[activeIndex].id}?modestbranding=1&rel=0&showinfo=0&color=white&autoplay=0`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  frameBorder="0"
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+      </div>
+ 
+      {/* Visual divider separating the video stage from the scrolling planets footer navigation */}
+      <div className="w-full max-w-[85%] md:max-w-[90vw] mx-auto mt-6 mb-2 shrink-0 opacity-20 relative z-10">
+        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-glow to-transparent" />
+      </div>
+ 
+      {/* Horizontal Planet Navigation at the bottom */}
+      <div 
+         ref={scrollRef}
+         onMouseEnter={() => setIsHovered(true)}
+         onMouseLeave={() => setIsHovered(false)}
+         className="w-full relative flex items-center py-1 overflow-x-auto no-scrollbar shrink-0 mt-6"
+         style={{
+           maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+         }}
+      >
+        <div className="flex items-center gap-1.5 px-12 pb-1">
+          {[...videoPlanets, ...videoPlanets].map((p, i) => {
+            const isActualVideo = i % videoPlanets.length;
+            const isActive = activeIndex === isActualVideo;
+            
+            return (
+              <div key={`${p.id}-${i}`} className="flex items-center shrink-0">
+                <div className="w-4 h-[1px] bg-gradient-to-r from-transparent via-glow/20 to-transparent" />
+                <motion.button
+                  onClick={() => setActiveIndex(isActualVideo)}
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  className={`relative z-10 flex flex-col items-center gap-1 transition-all duration-500 cursor-pointer px-3 hover:opacity-100 ${
+                    isActive ? 'opacity-100 scale-102' : 'opacity-70 grayscale-[0.1]'
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <div className={`rounded-full transition-all duration-700 ${p.size} ${p.color} ${p.glow} ${
+                      isActive ? 'ring-1 ring-glow ring-offset-2 ring-offset-void shadow-[0_0_20px_rgba(200,184,255,0.4)]' : ''
+                    }`} />
+                    {p.hasRing && (
+                      <div className={`absolute w-[180%] h-[30%] border ${p.ringColor || 'border-glow/30'} rounded-[100%] ${(p as any).ringRotate || 'rotate-[-25deg]'} z-0`} />
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className={`font-display text-[0.45rem] tracking-[0.3em] uppercase text-center leading-none transition-all duration-500 font-bold ${
+                      isActive ? 'text-glow' : 'text-frost/80'
+                    }`}>
+                      {p.name}
+                    </span>
+                    <span className={`font-display text-[0.35rem] tracking-[0.1em] uppercase text-center block max-w-[80px] truncate leading-tight transition-all duration-500 font-semibold ${
+                      isActive ? 'text-frost' : 'text-frost/40'
+                    }`}>
+                      {p.title}
+                    </span>
+                  </div>
+                </motion.button>
+              </div>
+            );
+          })}
+          <div className="w-8 h-[1px] bg-gradient-to-r from-transparent via-glow/20 to-transparent" />
         </div>
       </div>
     </div>
@@ -608,8 +640,8 @@ const Tour = () => {
   return (
     <div className="flex-1 flex flex-col justify-center py-12 relative">
       <SocialLinks />
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-dust mb-16 flex items-center gap-4">
-        <div className="w-8 h-px bg-dust" />
+      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
+        <div className="w-8 h-px bg-baby-blue" />
         04 — Live
       </div>
 
@@ -627,7 +659,7 @@ const Tour = () => {
 
             {/* Info */}
             <div className="flex flex-col gap-2">
-              <span className="font-display text-[0.45rem] tracking-[0.4em] text-glow uppercase">{item.date}</span>
+              <span className="font-display text-[0.45rem] tracking-[0.4em] text-baby-blue uppercase">{item.date}</span>
               <h3 className="font-display text-[0.7rem] md:text-[0.85rem] text-frost uppercase tracking-[0.25em] leading-relaxed">
                 {item.city} — {item.venue}
               </h3>
@@ -648,40 +680,166 @@ const Tour = () => {
 };
 
 const Newsletter = () => {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setStatus('error');
+      setErrorMessage('PLEASE ENTER A VALID EMAIL ADDRESS');
+      return;
+    }
+
+    try {
+      // 1. Save email to localStorage subscribers list as fallback/backup
+      const saved = localStorage.getItem('sola-subscribers');
+      const list = saved ? JSON.parse(saved) : [];
+      
+      const emailLower = email.trim().toLowerCase();
+      if (!list.some((sub: any) => sub.email.toLowerCase() === emailLower)) {
+        list.push({
+          email: email.trim(),
+          date: new Date().toISOString()
+        });
+        localStorage.setItem('sola-subscribers', JSON.stringify(list));
+      }
+
+      // 2. Submit to Google Form using secret hidden iframe trick to bypass CORS
+      const configuredFormUrl = localStorage.getItem('sola-form-url') || "https://docs.google.com/forms/d/1Rxb2YDX72obeQ1IoZEqOOtSM7xycUefU7LSjp0_LpS0/formResponse";
+      const configuredEntryId = localStorage.getItem('sola-entry-id') || "entry.1044431221";
+
+      if (configuredFormUrl && configuredEntryId) {
+        // Automatically normalize standard edit/viewform URLs to the correct /formResponse POST endpoint
+        const targetUrl = configuredFormUrl
+          .trim()
+          .replace(/\/edit(\?.*)?$/, '/formResponse')
+          .replace(/\/viewform(\?.*)?$/, '/formResponse');
+
+        const iframeId = 'sola_gform_target_iframe';
+        let iframe = document.getElementById(iframeId) as HTMLIFrameElement;
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.id = iframeId;
+          iframe.name = iframeId;
+          iframe.style.display = 'none';
+          document.body.appendChild(iframe);
+        }
+
+        const hiddenForm = document.createElement('form');
+        hiddenForm.action = targetUrl;
+        hiddenForm.method = 'POST';
+        hiddenForm.target = iframeId;
+
+        const emailInput = document.createElement('input');
+        emailInput.type = 'hidden';
+        emailInput.name = configuredEntryId;
+        emailInput.value = email.trim();
+
+        hiddenForm.appendChild(emailInput);
+        document.body.appendChild(hiddenForm);
+        hiddenForm.submit();
+
+        // Perform clean background sweep
+        setTimeout(() => {
+          if (hiddenForm.parentNode) {
+            document.body.removeChild(hiddenForm);
+          }
+        }, 800);
+      }
+
+      setStatus('success');
+      setEmail('');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage('AN ERROR OCCURRED. PLEASE TRY AGAIN.');
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col justify-center py-12">
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-dust mb-8 flex items-center gap-4">
-        <div className="w-8 h-px bg-dust" />
+      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-8 flex items-center gap-4">
+        <div className="w-8 h-px bg-baby-blue" />
         05 — Contact
       </div>
       <div className="max-w-4xl mx-auto text-center w-full">
-        <p className="font-serif italic text-[1.75rem] md:text-[2.25rem] tracking-[0.2em] text-glow drop-shadow-[0_0_15px_rgba(200,184,255,0.4)] mb-12">
+        <p className="font-serif italic text-[1.75rem] md:text-[2.25rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(137,207,240,0.4)] mb-12 animate-pulse-slow chrome-ice-clean bg-clip-text">
           enter the orbit
         </p>
-        <form className="max-w-md mx-auto flex flex-col md:flex-row gap-4">
-          <input 
-            type="email" 
-            placeholder="ENTER EMAIL ADDRESS"
-            className="flex-1 bg-void border border-glow/20 px-6 py-4 font-display text-[0.6rem] tracking-[0.2em] text-frost focus:outline-none focus:border-glow/50 transition-colors"
-          />
-          <button className="px-8 py-4 bg-glow text-void font-display text-[0.6rem] tracking-[0.4em] uppercase hover:bg-frost transition-colors">
-            Subscribe
-          </button>
-        </form>
+        
+        {status === 'success' ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto p-6 border border-baby-blue/30 bg-surface/80 rounded backdrop-blur-sm shadow-[0_0_20px_rgba(137,207,240,0.1)]"
+          >
+            <p className="font-display text-[0.6rem] tracking-[0.3em] text-baby-blue mb-2 uppercase font-bold">orbit entered</p>
+            <p className="font-ibm-mono text-[0.55rem] tracking-[0.1em] text-frost/80 uppercase">you are now synchronized with the sola system.</p>
+            <button 
+              onClick={() => setStatus('idle')}
+              className="mt-4 font-display text-[0.45rem] tracking-[0.2em] text-baby-blue/60 hover:text-baby-blue uppercase transition-colors"
+            >
+              [ Subscribe Another ]
+            </button>
+          </motion.div>
+        ) : (
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col md:flex-row gap-4">
+            <div className="flex-1 flex flex-col gap-2">
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status === 'error') setStatus('idle');
+                }}
+                placeholder="ENTER EMAIL ADDRESS"
+                className="w-full bg-void border border-baby-blue/20 px-6 py-4 font-display text-[0.6rem] tracking-[0.2em] text-[#89CFF0] focus:outline-none focus:border-baby-blue/60 transition-colors placeholder:text-baby-blue/40"
+              />
+              {status === 'error' && (
+                <span className="text-left font-ibm-mono text-[0.5rem] tracking-[0.1em] text-coral uppercase mt-1">
+                  {errorMessage}
+                </span>
+              )}
+            </div>
+            <button type="submit" className="px-8 py-4 bg-chrome-ice text-void font-display text-[0.6rem] tracking-[0.4em] uppercase hover:brightness-110 transition-all font-bold h-fit shrink-0">
+              Subscribe
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
 };
 
-const Footer = () => {
+const Footer = ({ onOpenAdmin }: { onOpenAdmin?: () => void }) => {
+  const [clickCount, setClickCount] = useState(0);
+
+  const handleClick = () => {
+    if (!onOpenAdmin) return;
+    setClickCount(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        onOpenAdmin();
+        return 0;
+      }
+      return next;
+    });
+  };
+
   return (
     <footer className="px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10 opacity-40">
-      <p className="font-display text-[0.45rem] tracking-[0.3em] text-glow uppercase">© 2025 Sola. All rights reserved.</p>
+      <p 
+        onClick={handleClick}
+        className="font-display text-[0.45rem] tracking-[0.3em] text-[#89CFF0] hover:text-[#c8b8ff] transition-colors uppercase cursor-pointer select-none"
+      >
+        © 2025 Ṣọ́lá. All rights reserved. {clickCount > 0 && clickCount < 5 && `(${clickCount})`}
+      </p>
     </footer>
   );
 };
 
-const SocialLinks = () => {
+const SocialLinks = ({ className = "absolute bottom-8 right-8 z-[100] flex items-center gap-6" }: { className?: string }) => {
   const socials = [
     { id: 'instagram', icon: <Instagram size={14} />, url: 'https://www.instagram.com/thisissola/' },
     { id: 'tiktok', icon: (
@@ -706,15 +864,15 @@ const SocialLinks = () => {
   ];
 
   return (
-    <div className="absolute bottom-8 right-8 z-[100] flex items-center gap-6">
+    <div className={className}>
       {socials.map((social) => (
         <motion.a
           key={social.id}
           href={social.url}
           target="_blank"
           rel="noopener noreferrer"
-          whileHover={{ y: -4, color: 'var(--color-glow)' }}
-          className="text-glow/40 hover:text-glow transition-colors duration-300"
+          whileHover={{ y: -4, color: 'var(--color-baby-blue)' }}
+          className="text-baby-blue/40 hover:text-baby-blue transition-colors duration-300"
         >
           {social.icon}
         </motion.a>
@@ -745,12 +903,216 @@ const Splash = ({ onEnter }: { onEnter: () => void }) => {
           }}
           whileHover={{ scale: 1.05, letterSpacing: '0.6em', boxShadow: '0 0 20px rgba(137,207,240,0.4)' }}
           whileTap={{ scale: 0.95 }}
-          className="px-12 py-4 border border-baby-blue/30 font-display text-[0.6rem] tracking-[0.4em] text-baby-blue uppercase hover:bg-baby-blue hover:text-void transition-all duration-500 shadow-[0_0_15px_rgba(137,207,240,0.2)]"
+          className="px-12 py-4 border border-baby-blue/30 font-display text-[0.6rem] tracking-[0.4em] uppercase hover:bg-baby-blue transition-all duration-500 shadow-[0_0_15px_rgba(137,207,240,0.2)]"
         >
-          Enter Orbit
+          <span className="chrome">Enter Orbit</span>
         </motion.button>
       </div>
     </motion.div>
+  );
+};
+
+const SubscriberModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [subscribers, setSubscribers] = useState<{ email: string; date: string }[]>([]);
+  const [activeTab, setActiveTab] = useState<'list' | 'gform'>('list');
+  const [formUrl, setFormUrl] = useState('');
+  const [entryId, setEntryId] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const saved = localStorage.getItem('sola-subscribers');
+        setSubscribers(saved ? JSON.parse(saved) : []);
+
+        const savedUrl = localStorage.getItem('sola-form-url') || "https://docs.google.com/forms/d/1Rxb2YDX72obeQ1IoZEqOOtSM7xycUefU7LSjp0_LpS0/viewform";
+        const savedEntryId = localStorage.getItem('sola-entry-id') || "entry.1044431221";
+        setFormUrl(savedUrl);
+        setEntryId(savedEntryId);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [isOpen]);
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      localStorage.setItem('sola-form-url', formUrl.trim());
+      localStorage.setItem('sola-entry-id', entryId.trim());
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2500);
+    } catch (err) {
+      alert("Error saving settings.");
+    }
+  };
+
+  const handleDownload = () => {
+    if (subscribers.length === 0) return;
+    try {
+      const csvContent = "data:text/csv;charset=utf-8,Email,SignUp Date\n" 
+        + subscribers.map(s => `"${s.email.replace(/"/g, '""')}","${new Date(s.date).toLocaleString()}"`).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `sola_subscribers_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Error generating download.");
+    }
+  };
+
+  const handleClear = () => {
+    if (window.confirm("Are you sure you want to clear your subscriber list? This cannot be undone.")) {
+      localStorage.removeItem('sola-subscribers');
+      setSubscribers([]);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-void/90 backdrop-blur-md">
+      <div className="w-full max-w-lg border border-baby-blue/30 bg-[#05050a] rounded p-6 shadow-[0_0_50px_rgba(137,207,240,0.15)] flex flex-col max-h-[85vh] relative z-100">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display text-[0.7rem] tracking-[0.4em] uppercase text-baby-blue flex items-center gap-2">
+            <div className="w-2 h-2 bg-baby-blue rounded-full animate-ping" />
+            Control Center
+          </h3>
+          <button 
+            onClick={onClose}
+            className="text-baby-blue/40 hover:text-baby-blue transition-colors font-display text-[0.5rem] tracking-[0.2em] uppercase shrink-0"
+          >
+            [ ESC ]
+          </button>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="flex border-b border-baby-blue/10 mb-6 font-display text-[0.55rem] tracking-[0.2em] uppercase shrink-0">
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('list')}
+            className={`flex-1 py-2 text-center transition-colors border-b-2 cursor-pointer ${
+              activeTab === 'list' ? 'border-baby-blue text-baby-blue font-bold' : 'border-transparent text-baby-blue/40 hover:text-baby-blue/70'
+            }`}
+          >
+            Registry List ({subscribers.length})
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('gform')}
+            className={`flex-1 py-2 text-center transition-colors border-b-2 cursor-pointer ${
+              activeTab === 'gform' ? 'border-baby-blue text-baby-blue font-bold' : 'border-transparent text-baby-blue/40 hover:text-baby-blue/70'
+            }`}
+          >
+            Google Form Integration
+          </button>
+        </div>
+
+        {/* Tab content */}
+        {activeTab === 'list' ? (
+          <>
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 mb-6 pr-1 max-h-[40vh]">
+              {subscribers.length === 0 ? (
+                <p className="font-ibm-mono text-[0.55rem] tracking-[0.1em] text-dust/60 text-center py-12 uppercase italic">
+                  no entities registered in this solar orbit yet.
+                </p>
+              ) : (
+                subscribers.map((sub, i) => (
+                  <div key={i} className="flex justify-between items-center bg-void border border-baby-blue/5 p-3 rounded font-ibm-mono text-[0.55rem] tracking-[0.05em] uppercase">
+                    <span className="text-frost select-all truncate mr-4">{sub.email}</span>
+                    <span className="text-dust/40 text-[0.5rem] shrink-0">{new Date(sub.date).toLocaleDateString()}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                type="button"
+                onClick={handleDownload}
+                disabled={subscribers.length === 0}
+                className="flex-1 px-4 py-3 bg-chrome-ice text-void font-display text-[0.55rem] tracking-[0.2em] uppercase font-bold hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:scale-100 transition-all cursor-pointer"
+              >
+                Export CSV
+              </button>
+              <button 
+                type="button"
+                onClick={handleClear}
+                disabled={subscribers.length === 0}
+                className="px-4 py-3 border border-coral/30 hover:bg-coral/10 text-coral font-display text-[0.55rem] tracking-[0.2em] uppercase transition-all active:scale-95 disabled:opacity-30 disabled:scale-100 cursor-pointer"
+              >
+                Clear list
+              </button>
+              <button 
+                type="button"
+                onClick={onClose}
+                className="px-4 py-3 border border-baby-blue/20 hover:bg-baby-blue/5 text-baby-blue font-display text-[0.55rem] tracking-[0.2em] uppercase transition-all active:scale-95 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </>
+        ) : (
+          <form onSubmit={handleSaveSettings} className="flex-1 flex flex-col justify-between max-h-[50vh]">
+            <div className="space-y-4 overflow-y-auto no-scrollbar pr-1 mb-6 text-left">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-display text-[0.5rem] tracking-[0.2em] text-[#89CFF0] uppercase">Google Form Link</label>
+                <input 
+                  type="url"
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                  placeholder="https://docs.google.com/forms/d/.../viewform"
+                  className="w-full bg-void border border-baby-blue/20 px-4 py-3 font-ibm-mono text-[0.55rem] tracking-[0.05em] text-[#89CFF0] focus:outline-none focus:border-baby-blue/60 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-display text-[0.5rem] tracking-[0.2em] text-[#89CFF0] uppercase">Email Field Entry ID</label>
+                <input 
+                  type="text"
+                  value={entryId}
+                  onChange={(e) => setEntryId(e.target.value)}
+                  placeholder="entry.1044431221"
+                  className="w-full bg-void border border-baby-blue/20 px-4 py-3 font-ibm-mono text-[0.55rem] tracking-[0.05em] text-[#89CFF0] focus:outline-none focus:border-baby-blue/60 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="border border-baby-blue/10 bg-void/50 p-4 rounded text-left space-y-2">
+                <p className="font-display text-[0.45rem] tracking-[0.2em] text-baby-blue uppercase font-bold">how to find details:</p>
+                <ol className="list-decimal list-inside font-ibm-mono text-[0.5rem] tracking-[0.05em] text-dust/60 space-y-1.5 uppercase leading-relaxed">
+                  <li>open your google form editor. click send, get the link, and paste it above under google form link.</li>
+                  <li>open the public forms link in your browser. right click on the email input block, select inspect, and locate the name="..." attribute (e.g., entry.1234567 or emailAddress).</li>
+                  <li>copy that parameter string and paste it under entry id.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="flex gap-4 shrink-0">
+              <button 
+                type="submit"
+                className="flex-1 px-4 py-3 bg-chrome-ice text-void font-display text-[0.55rem] tracking-[0.2em] uppercase font-bold hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                {isSaved ? "Saved Successfully" : "Save Integration"}
+              </button>
+              <button 
+                type="button"
+                onClick={onClose}
+                className="px-4 py-3 border border-baby-blue/20 hover:bg-baby-blue/5 text-baby-blue font-display text-[0.55rem] tracking-[0.2em] uppercase transition-all active:scale-95 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -758,6 +1120,7 @@ const Splash = ({ onEnter }: { onEnter: () => void }) => {
 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const handleEnter = () => {
     setHasEntered(true);
@@ -791,10 +1154,12 @@ export default function App() {
           <section id="newsletter" className="snap-start h-screen px-8 flex flex-col justify-between bg-void/30 backdrop-blur-sm overflow-hidden relative">
             <Newsletter />
             <SocialLinks />
-            <Footer />
+            <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
           </section>
         </main>
       </div>
+
+      <SubscriberModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Noise Overlay */}
       <div className="fixed inset-0 pointer-events-none z-[5] opacity-[0.04] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
