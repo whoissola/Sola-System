@@ -386,11 +386,10 @@ const Navbar = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-void/80 to-transparent pointer-events-none" />
       <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] hover:scale-105 transition-transform duration-300 chrome bg-clip-text font-normal">ṢỌ́LÁ</a>
       <ul className="relative hidden md:flex gap-12 list-none items-center">
-        {['VIDEOS', 'PRESS & LIVE', 'CONTACT', 'ABOUT'].map((item) => {
+        {['VIDEOS', 'PRESS', 'LIVE', 'CONTACT', 'ABOUT'].map((item) => {
           let hrefVal = item.toLowerCase();
           if (hrefVal === 'about') hrefVal = 'world';
           else if (hrefVal === 'contact') hrefVal = 'newsletter';
-          else if (hrefVal.includes('press') || hrefVal.includes('live')) hrefVal = 'press';
 
           return (
             <li key={item}>
@@ -423,9 +422,10 @@ const Hero = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
         {[
           { id: 'world', label: 'WORLD', size: 320, color: 'bg-amber shadow-[0_0_12px_var(--color-amber)]' },
-          { id: 'videos', label: 'VIDEOS', size: 420, color: 'bg-teal shadow-[0_0_16px_var(--color-teal)]' },
-          { id: 'press', label: 'PRESS & LIVE', size: 520, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
-          { id: 'newsletter', label: 'NEWSLETTER', size: 620, color: 'bg-baby-blue shadow-[0_0_15px_rgba(137,207,240,0.6)]' },
+          { id: 'videos', label: 'VIDEOS', size: 410, color: 'bg-teal shadow-[0_0_16px_var(--color-teal)]' },
+          { id: 'press', label: 'PRESS', size: 500, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
+          { id: 'live', label: 'LIVE', size: 590, color: 'bg-coral shadow-[0_0_14px_var(--color-coral)]' },
+          { id: 'newsletter', label: 'NEWSLETTER', size: 680, color: 'bg-baby-blue shadow-[0_0_15px_rgba(137,207,240,0.6)]' },
         ].map((orbit, i) => {
           const radius = orbit.size / 2;
           const startRotation = i * (360 / 8);
@@ -516,7 +516,7 @@ const About = () => {
           >
             about
           </h2>
-          <div className="space-y-3 sm:space-y-4 text-frost font-display text-[0.58rem] sm:text-[0.64rem] md:text-[0.72rem] font-normal tracking-[0.2em] leading-[1.8] uppercase">
+          <div className="space-y-3 sm:space-y-4 text-frost font-display text-[0.52rem] sm:text-[0.58rem] md:text-[0.625rem] font-normal tracking-[0.2em] leading-[1.8] uppercase">
             <p className="indent-12 md:indent-24">
               South London's Sola Reimagines the formal structures of classical music through an avant-garde, Black British lens. A multi-instrumentalist, producer, and composer, she dismantles her classical training to build a sound entirely on her own terms: heavy, atmospheric, somewhere between trip-hop, electronic R&B, and jazz.
             </p>
@@ -692,7 +692,6 @@ const PressAndLive = () => {
       </div>
 
       <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 max-w-4xl">
-        {/* Press Column */}
         <div className="space-y-3 md:space-y-4">
           <h3 
             style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
@@ -721,7 +720,6 @@ const PressAndLive = () => {
           </div>
         </div>
 
-        {/* Live Column */}
         <div className="space-y-3 md:space-y-4">
           <h3 
             style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
@@ -779,6 +777,21 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
       setHasActivated(true);
     }
   }, [isActive]);
+
+  // Reset hover state when active video changes or window blurs (e.g. clicking iframe)
+  useEffect(() => {
+    setIsHovered(false);
+  }, [activeIndex]);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      setIsHovered(false);
+    };
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   const handleIframeLoad = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -870,7 +883,7 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
     let animationFrameId: number;
     const scroll = () => {
       if (!isHovered) {
-        scrollPosRef.current += 0.45; // Faster controlled drift
+        scrollPosRef.current += 0.22; // Moderate controlled drift
         scrollContainer.scrollLeft = Math.floor(scrollPosRef.current);
         
         if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
@@ -949,7 +962,10 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
             return (
               <div key={`${p.id}-${i}`} className="flex flex-col items-center shrink-0 relative">
                 <motion.button
-                  onClick={() => setActiveIndex(isActualVideo)}
+                  onClick={() => {
+                    setActiveIndex(isActualVideo);
+                    setIsHovered(false);
+                  }}
                   whileHover={{ scale: 1.02, y: -2 }}
                   className={`relative z-10 flex flex-col items-start gap-2 transition-all duration-500 cursor-pointer w-40 md:w-44 ${
                     isActive ? 'opacity-100' : 'opacity-40 hover:opacity-80'
@@ -1490,7 +1506,8 @@ export default function App() {
           <section id="videos" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
             <Pictures isActive={activeSection === "videos"} isMuted={isMuted} volume={volume} />
           </section>
-          <section id="press" className="snap-start h-screen px-4 sm:px-8 flex flex-col justify-center overflow-hidden">
+          <section id="press" className="snap-start h-screen px-4 sm:px-8 flex flex-col justify-center overflow-hidden relative">
+            <div id="live" className="absolute top-0 left-0 w-px h-px pointer-events-none opacity-0" />
             <PressAndLive />
           </section>
           <section id="newsletter" className="snap-start h-screen px-8 flex flex-col justify-between bg-void/30 backdrop-blur-sm overflow-hidden relative">
