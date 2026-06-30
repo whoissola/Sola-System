@@ -228,11 +228,7 @@ const SocialLinks = ({
         <path d="M7 8.5c4-2 8-2 12 0" />
       </svg>
     ), url: 'https://open.spotify.com/artist/1Bfk5r6g6fXLaMoESYbePK' },
-    { id: 'x', icon: (
-      <svg width={iconSize - 2} height={iconSize - 2} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ), url: 'https://x.com/thisissola' },
+    { id: 'mail', icon: <Mail size={iconSize} />, url: 'mailto:whoissola@gmail.com' },
   ];
 
   return (
@@ -241,7 +237,7 @@ const SocialLinks = ({
         <motion.a
           key={social.id}
           href={social.url}
-          target="_blank"
+          target={social.id === 'mail' ? undefined : '_blank'}
           rel="noopener noreferrer"
           whileHover={{ scale: 1.15, y: -2, color: 'var(--color-baby-blue)' }}
           className="text-baby-blue/40 hover:text-baby-blue transition-colors duration-300"
@@ -536,13 +532,23 @@ const PressAndLive = () => {
       city: 'London', 
       venue: 'Southbank Centre', 
       status: 'Archive', 
+      url: 'https://www.southbankcentre.co.uk',
       planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', size: 'w-4 h-4', glow: 'shadow-[0_0_8px_rgba(181,161,150,0.3)]' }
+    },
+    { 
+      date: 'Apr 14 2025', 
+      city: 'London', 
+      venue: 'V&A East Museum', 
+      status: 'Archive', 
+      url: 'https://www.vam.ac.uk/east',
+      planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#a8dadc,#457b9d)]', size: 'w-5 h-5', glow: 'shadow-[0_0_10px_rgba(168,218,220,0.3)]' }
     },
     { 
       date: 'Jul 23 2025', 
       city: 'Sardinia', 
       venue: 'Polifonic Festival', 
       status: 'Tickets', 
+      url: 'https://www.polifonic.it/',
       planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', size: 'w-6 h-6', glow: 'shadow-[0_0_12px_rgba(240,192,128,0.3)]' }
     },
   ];
@@ -606,7 +612,7 @@ const PressAndLive = () => {
                     </p>
                     {isTickets ? (
                       <a 
-                        href="https://www.southbankcentre.co.uk"
+                        href={item.url || "https://www.southbankcentre.co.uk"}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0 text-[0.4rem] sm:text-[0.45rem] tracking-[0.15em] px-2.5 py-0.5 border border-teal text-teal hover:bg-teal hover:text-void transition-all font-bold uppercase rounded-sm"
@@ -937,9 +943,19 @@ const Newsletter = () => {
         05 — Contact
       </div>
       <div className="max-w-4xl mx-auto text-center w-full">
-        <p className="font-serif italic text-[1.75rem] md:text-[2.25rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(137,207,240,0.4)] mb-12 animate-pulse-slow chrome-ice-clean bg-clip-text">
+        <p className="font-serif italic text-[1.75rem] md:text-[2.25rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(137,207,240,0.4)] mb-4 animate-pulse-slow chrome-ice-clean bg-clip-text">
           enter the orbit
         </p>
+
+        <div className="mb-12 font-display text-[0.6rem] sm:text-[0.65rem] tracking-[0.3em] uppercase text-frost/50">
+          <span className="select-none text-baby-blue font-bold">CONTACT: </span>
+          <a 
+            href="mailto:whoissola@gmail.com"
+            className="text-frost hover:text-baby-blue transition-colors duration-300 font-normal"
+          >
+            whoissola@gmail.com
+          </a>
+        </div>
         
         {status === 'success' ? (
           <motion.div 
@@ -1024,7 +1040,7 @@ const Splash = ({ onEnter }: { onEnter: () => void }) => {
       <YouTubeBackground videoId={SPLASH_VIDEO_ID} opacity={0.6} />
       <div className="absolute inset-0 bg-void/40 backdrop-blur-[2px]" />
       
-      <div className="relative z-10 text-center">
+      <div className="relative z-10 text-center flex flex-col items-center gap-6">
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
