@@ -528,24 +528,24 @@ const PressAndLive = () => {
 
   const tourDates = [
     { 
-      date: 'Apr 02 2025', 
-      city: 'London', 
+      date: 'Apr 02 2026', 
+      city: 'London, UK', 
       venue: 'Southbank Centre', 
       status: 'Archive', 
       url: 'https://www.southbankcentre.co.uk',
       planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', size: 'w-4 h-4', glow: 'shadow-[0_0_8px_rgba(181,161,150,0.3)]' }
     },
     { 
-      date: 'Apr 14 2025', 
-      city: 'London', 
+      date: 'Apr 14 2026', 
+      city: 'London, UK', 
       venue: 'V&A East Museum', 
       status: 'Archive', 
       url: 'https://www.vam.ac.uk/east',
       planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#a8dadc,#457b9d)]', size: 'w-5 h-5', glow: 'shadow-[0_0_10px_rgba(168,218,220,0.3)]' }
     },
     { 
-      date: 'Jul 23 2025', 
-      city: 'Sardinia', 
+      date: 'Jul 23 2026', 
+      city: 'Puglia, Italy', 
       venue: 'Polifonic Festival', 
       status: 'Tickets', 
       url: 'https://www.polifonic.it/',
