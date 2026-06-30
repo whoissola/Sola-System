@@ -772,6 +772,15 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [hasActivated, setHasActivated] = useState(false);
 
+  const videoPlanets = [
+    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[12px] h-[12px]' },
+    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[18px] h-[18px]' },
+    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[16px] h-[16px]' },
+    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[14px] h-[14px]' },
+    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[26px] h-[26px]' },
+    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[18px] h-[18px]' }
+  ];
+
   useEffect(() => {
     if (isActive) {
       setHasActivated(true);
@@ -822,15 +831,33 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
       }), '*');
     }
   }, [isMuted, volume]);
-  
-  const videoPlanets = [
-    { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[12px] h-[12px]' },
-    { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[18px] h-[18px]' },
-    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[16px] h-[16px]' },
-    { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[14px] h-[14px]' },
-    { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[26px] h-[26px]' },
-    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[18px] h-[18px]' }
-  ];
+
+  // Listen for video end to autoplay the next one in order
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.origin || !event.origin.includes('youtube.com')) return;
+
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data) {
+          const isEnded = (data.event === 'onStateChange' && data.info === 0) ||
+                          (data.event === 'infoDelivery' && data.info && data.info.playerState === 0);
+          
+          if (isEnded) {
+            setActiveIndex((prev) => (prev + 1) % videoPlanets.length);
+            setHasActivated(true);
+          }
+        }
+      } catch (err) {
+        // Safe check for non-JSON messages
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [videoPlanets.length]);
  
   // Center Slow Dance on mount
   useEffect(() => {
