@@ -408,24 +408,21 @@ const About = () => {
             <div className="space-y-1.5 sm:space-y-2 text-frost font-display text-[0.52rem] sm:text-[0.56rem] md:text-[0.62rem] font-normal tracking-[0.22em] leading-[1.6] uppercase">
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-semibold">No Reproductive Justice, No Peace</span> <span className="text-frost/75">| Dir. Nadira Jamerson & Arieanne Evans | Original Score</span></p>
+                <p><span className="text-baby-blue font-bold">No Reproductive Justice, No Peace</span> <span className="text-frost/75">| Dir. Nadira Jamerson & Arieanne Evans | Original Score</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-semibold">The Book of Clarence Soundtrack</span> <span className="text-frost/75">| Dir. Jeymes Samuel | Featured Vocalist</span></p>
+                <p><span className="text-baby-blue font-bold">The Book of Clarence Soundtrack</span> <span className="text-frost/75">| Dir. Jeymes Samuel | Featured Vocalist</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-semibold">Hello Happiness</span> <span className="text-frost/75">| Prod. The Wellcome Collection | Original Score</span></p>
+                <p><span className="text-baby-blue font-bold">Hello Happiness</span> <span className="text-frost/75">| Prod. The Wellcome Collection | Original Score</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-semibold">Between The Lines Podcast</span> <span className="text-frost/75">| Jamz Supernova | Original Score</span></p>
+                <p><span className="text-baby-blue font-bold">Between The Lines Podcast</span> <span className="text-frost/75">| Jamz Supernova | Original Score</span></p>
               </div>
             </div>
-          </div>
-          <div className="mt-8 md:mt-10">
-            <SocialLinks className="flex items-center gap-6" iconSize={18} />
           </div>
         </div>
       </div>
@@ -627,9 +624,6 @@ const PressAndLive = () => {
             })}
           </div>
         </div>
-      </div>
-      <div className="mt-8 md:mt-10">
-        <SocialLinks className="flex items-center gap-6" iconSize={18} />
       </div>
     </div>
   );
@@ -1260,11 +1254,34 @@ const SubscriberModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
 
   const handleEnter = () => {
     setHasEntered(true);
     window.scrollTo(0, 0);
   };
+
+  useEffect(() => {
+    if (!hasEntered) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id || "home");
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    const sections = document.querySelectorAll("main > section");
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+    };
+  }, [hasEntered]);
 
   return (
     <div className="relative min-h-screen selection:bg-glow selection:text-void">
@@ -1277,7 +1294,7 @@ export default function App() {
       <div className={`relative z-10 transition-opacity duration-1000 ${hasEntered ? 'opacity-100' : 'opacity-0'}`}>
         <Navbar />
         <main className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth no-scrollbar">
-          <section className="snap-start h-screen">
+          <section id="home" className="snap-start h-screen">
             <Hero />
           </section>
           <About />
@@ -1289,10 +1306,18 @@ export default function App() {
           </section>
           <section id="newsletter" className="snap-start h-screen px-8 flex flex-col justify-between bg-void/30 backdrop-blur-sm overflow-hidden relative">
             <Newsletter />
-            <SocialLinks />
             <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
           </section>
         </main>
+        {/* Global persistent fixed social footer on bottom right */}
+        <SocialLinks 
+          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[110] flex items-center gap-6 sm:gap-7 transition-all duration-300 ${
+            activeSection === 'videos' 
+              ? 'opacity-0 pointer-events-none translate-y-4' 
+              : 'opacity-100 translate-y-0'
+          }`} 
+          iconSize={24} 
+        />
       </div>
 
       <SubscriberModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
