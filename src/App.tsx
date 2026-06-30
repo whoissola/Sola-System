@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
-import { Play, Ticket, Mail, Instagram, Youtube, Music as MusicIcon, Disc, ExternalLink, ChevronDown } from 'lucide-react';
+import { Play, Ticket, Mail, Instagram, Youtube, Music as MusicIcon, Disc, ExternalLink, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 
 // --- Configuration ---
 const SPLASH_VIDEO_ID = "FLjW9ssv-aI";
@@ -205,9 +205,140 @@ const CustomCursor = () => {
   );
 };
 
+const VolumeControl = ({ 
+  isMuted, 
+  setIsMuted, 
+  volume, 
+  setVolume 
+}: { 
+  isMuted: boolean; 
+  setIsMuted: React.Dispatch<React.SetStateAction<boolean>>; 
+  volume: number; 
+  setVolume: React.Dispatch<React.SetStateAction<number>>; 
+}) => {
+  const [showSlider, setShowSlider] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Close slider when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (sliderRef.current && !sliderRef.current.contains(e.target as Node)) {
+        setShowSlider(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const trackVolume = (e: MouseEvent | TouchEvent) => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const rect = bar.getBoundingClientRect();
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clickY = clientY - rect.top;
+    const height = rect.height;
+    const newVolume = Math.max(0, Math.min(100, Math.round(((height - clickY) / height) * 100)));
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    trackVolume(e.nativeEvent);
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      trackVolume(moveEvent);
+    };
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    trackVolume(e.nativeEvent);
+    
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      trackVolume(moveEvent);
+    };
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+    
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+  };
+
+  return (
+    <div ref={sliderRef} className="fixed bottom-6 left-6 md:bottom-8 md:left-8 z-[110] flex flex-col items-center">
+      <AnimatePresence>
+        {showSlider && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="mb-3 px-3 py-4 bg-void/80 backdrop-blur-md rounded-full border border-baby-blue/15 shadow-[0_0_20px_rgba(137,207,240,0.1)] flex flex-col items-center gap-3 h-44 w-11 justify-between select-none"
+          >
+            <span className="text-[0.55rem] font-mono font-medium text-baby-blue/80 select-none">
+              {isMuted ? 0 : volume}
+            </span>
+            {/* Custom Interactive Vertical Track */}
+            <div 
+              ref={barRef}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              className="relative w-2 flex-1 bg-void/60 rounded-full cursor-ns-resize group"
+            >
+              {/* Progress bar */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 bg-baby-blue rounded-full"
+                style={{ height: `${isMuted ? 0 : volume}%` }}
+              />
+              {/* Handle Indicator */}
+              <div 
+                className="absolute left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white rounded-full border-2 border-baby-blue shadow-[0_0_8px_rgba(137,207,240,0.6)] cursor-ns-resize"
+                style={{ bottom: `calc(${isMuted ? 0 : volume}% - 7px)` }}
+              />
+            </div>
+
+            <motion.button
+              onClick={() => setIsMuted(prev => !prev)}
+              whileHover={{ scale: 1.15 }}
+              className="text-baby-blue hover:text-white transition-colors duration-300 cursor-pointer flex items-center justify-center pt-1 border-t border-baby-blue/10 w-full"
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX size={16} strokeWidth={1.2} /> : <Volume2 size={16} strokeWidth={1.2} />}
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+ 
+      <div className="flex items-center bg-void/25 backdrop-blur-md p-2.5 rounded-full transition-all duration-500 hover:bg-void/40">
+        <motion.button
+          onClick={() => setShowSlider(prev => !prev)}
+          whileHover={{ scale: 1.15, y: -1, color: 'var(--color-baby-blue)' }}
+          className={`text-baby-blue hover:text-white transition-colors duration-300 cursor-pointer flex items-center justify-center w-8 h-8 rounded-full ${showSlider ? 'bg-baby-blue/10 text-white' : ''}`}
+          title="Volume Control"
+        >
+          {isMuted ? <VolumeX size={20} strokeWidth={1.2} /> : <Volume2 size={20} strokeWidth={1.2} />}
+        </motion.button>
+      </div>
+    </div>
+  );
+};
+
 const SocialLinks = ({ 
   className = "absolute bottom-8 right-8 z-[100] flex items-center gap-6",
-  iconSize = 18 
+  iconSize = 18,
 }: { 
   className?: string;
   iconSize?: number;
@@ -404,19 +535,19 @@ const About = () => {
             <div className="space-y-1.5 sm:space-y-2 text-frost font-display text-[0.52rem] sm:text-[0.56rem] md:text-[0.62rem] font-normal tracking-[0.22em] leading-[1.6] uppercase">
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-bold">No Reproductive Justice, No Peace</span> <span className="text-frost/75">| Dir. Nadira Jamerson & Arieanne Evans | Original Score</span></p>
+                <p><span className="text-baby-blue font-normal font-subtle-bold">No Reproductive Justice, No Peace</span> <span className="text-frost/75">| Dir. Nadira Jamerson & Arieanne Evans | Original Score</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-bold">The Book of Clarence Soundtrack</span> <span className="text-frost/75">| Dir. Jeymes Samuel | Featured Vocalist</span></p>
+                <p><span className="text-baby-blue font-normal font-subtle-bold">The Book of Clarence Soundtrack</span> <span className="text-frost/75">| Dir. Jeymes Samuel | Featured Vocalist</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-bold">Hello Happiness</span> <span className="text-frost/75">| Prod. The Wellcome Collection | Original Score</span></p>
+                <p><span className="text-baby-blue font-normal font-subtle-bold">Hello Happiness</span> <span className="text-frost/75">| Prod. The Wellcome Collection | Original Score</span></p>
               </div>
               <div className="flex items-start gap-2 sm:gap-3">
                 <span className="text-baby-blue/50 select-none">•</span>
-                <p><span className="text-baby-blue font-bold">Between The Lines Podcast</span> <span className="text-frost/75">| Jamz Supernova | Original Score</span></p>
+                <p><span className="text-baby-blue font-normal font-subtle-bold">Between The Lines Podcast</span> <span className="text-frost/75">| Jamz Supernova | Original Theme</span></p>
               </div>
             </div>
           </div>
@@ -581,7 +712,7 @@ const PressAndLive = () => {
               >
                 <span className="text-baby-blue/50 select-none group-hover:text-baby-blue transition-colors">•</span>
                 <p className="flex-1">
-                  <span className="text-baby-blue font-semibold group-hover:text-white transition-colors">{article.source}</span>
+                  <span className="text-baby-blue font-normal font-subtle-bold group-hover:text-white transition-colors">{article.source}</span>
                   <span className="text-frost/75"> — </span>
                   <span className="text-frost group-hover:text-glow transition-colors">{article.title}</span>
                 </p>
@@ -606,7 +737,7 @@ const PressAndLive = () => {
                   <span className="text-baby-blue/50 select-none">•</span>
                   <div className="flex-1 flex justify-between items-center gap-4">
                     <p>
-                      <span className="text-baby-blue font-semibold">{item.venue}</span>
+                      <span className="text-baby-blue font-normal font-subtle-bold">{item.venue}</span>
                       <span className="text-frost/75"> ({item.city}) — </span>
                       <span className="text-frost">{item.date}</span>
                     </p>
@@ -635,11 +766,49 @@ const PressAndLive = () => {
   );
 };
 
-const Pictures = () => {
+const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: boolean; volume: number }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const scrollPosRef = useRef(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [hasActivated, setHasActivated] = useState(false);
+
+  useEffect(() => {
+    if (isActive) {
+      setHasActivated(true);
+    }
+  }, [isActive]);
+
+  const handleIframeLoad = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: isMuted ? 'mute' : 'unMute',
+        args: []
+      }), '*');
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setVolume',
+        args: [volume]
+      }), '*');
+    }
+  };
+
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: isMuted ? 'mute' : 'unMute',
+        args: []
+      }), '*');
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setVolume',
+        args: [volume]
+      }), '*');
+    }
+  }, [isMuted, volume]);
   
   const videoPlanets = [
     { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[12px] h-[12px]' },
@@ -701,7 +870,7 @@ const Pictures = () => {
     let animationFrameId: number;
     const scroll = () => {
       if (!isHovered) {
-        scrollPosRef.current += 0.12; // Slower controlled drift
+        scrollPosRef.current += 0.45; // Faster controlled drift
         scrollContainer.scrollLeft = Math.floor(scrollPosRef.current);
         
         if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
@@ -748,8 +917,10 @@ const Pictures = () => {
               className="w-full h-full"
             >
               <iframe
+                ref={iframeRef}
+                onLoad={handleIframeLoad}
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${activeVideos[activeIndex].id}?modestbranding=1&rel=0&showinfo=0&color=white&autoplay=0`}
+                src={`https://www.youtube.com/embed/${activeVideos[activeIndex].id}?modestbranding=1&rel=0&showinfo=0&color=white&autoplay=${hasActivated ? 1 : 0}&mute=${isMuted ? 1 : 0}&enablejsapi=1`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 frameBorder="0"
@@ -1271,6 +1442,8 @@ export default function App() {
   const [hasEntered, setHasEntered] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(50);
 
   const handleEnter = () => {
     setHasEntered(true);
@@ -1315,7 +1488,7 @@ export default function App() {
           </section>
           <About />
           <section id="videos" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
-            <Pictures />
+            <Pictures isActive={activeSection === "videos"} isMuted={isMuted} volume={volume} />
           </section>
           <section id="press" className="snap-start h-screen px-4 sm:px-8 flex flex-col justify-center overflow-hidden">
             <PressAndLive />
@@ -1327,13 +1500,18 @@ export default function App() {
         </main>
         {/* Global persistent fixed social footer on bottom right */}
         <SocialLinks 
-          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[110] flex items-center gap-6 sm:gap-7 transition-all duration-300 ${
-            activeSection === 'videos' 
-              ? 'opacity-0 pointer-events-none translate-y-4' 
-              : 'opacity-100 translate-y-0'
-          }`} 
-          iconSize={24} 
+          className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[110] flex items-center gap-5 sm:gap-6 bg-void/25 backdrop-blur-md px-5 py-2.5 rounded-full border border-baby-blue/10 shadow-[0_0_20px_rgba(137,207,240,0.05)] hover:border-baby-blue/30 transition-all duration-500"
+          iconSize={22} 
         />
+        {/* Global persistent fixed volume/mute controls on bottom left */}
+        {hasEntered && (
+          <VolumeControl 
+            isMuted={isMuted} 
+            setIsMuted={setIsMuted} 
+            volume={volume} 
+            setVolume={setVolume} 
+          />
+        )}
       </div>
 
       <SubscriberModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
