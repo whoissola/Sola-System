@@ -205,22 +205,77 @@ const CustomCursor = () => {
   );
 };
 
+const SocialLinks = ({ 
+  className = "absolute bottom-8 right-8 z-[100] flex items-center gap-6",
+  iconSize = 18 
+}: { 
+  className?: string;
+  iconSize?: number;
+}) => {
+  const socials = [
+    { id: 'instagram', icon: <Instagram size={iconSize} />, url: 'https://www.instagram.com/thisissola/' },
+    { id: 'tiktok', icon: (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+      </svg>
+    ), url: 'https://www.tiktok.com/@thisissola' },
+    { id: 'youtube', icon: <Youtube size={iconSize} />, url: 'http://youtube.com/@thisissola' },
+    { id: 'spotify', icon: (
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 14.5c2.5-1 5.5-1 8 0" />
+        <path d="M7 11.5c3.5-1.5 7-1.5 10.5 0" />
+        <path d="M7 8.5c4-2 8-2 12 0" />
+      </svg>
+    ), url: 'https://open.spotify.com/artist/1Bfk5r6g6fXLaMoESYbePK' },
+    { id: 'x', icon: (
+      <svg width={iconSize - 2} height={iconSize - 2} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ), url: 'https://x.com/thisissola' },
+  ];
+
+  return (
+    <div className={className}>
+      {socials.map((social) => (
+        <motion.a
+          key={social.id}
+          href={social.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.15, y: -2, color: 'var(--color-baby-blue)' }}
+          className="text-baby-blue/40 hover:text-baby-blue transition-colors duration-300"
+        >
+          {social.icon}
+        </motion.a>
+      ))}
+    </div>
+  );
+};
+
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] px-8 py-8 flex justify-between items-center">
       <div className="absolute inset-0 bg-gradient-to-b from-void/80 to-transparent pointer-events-none" />
-      <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] hover:scale-105 transition-transform duration-300 chrome bg-clip-text font-bold">ṢỌ́LÁ</a>
+      <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] hover:scale-105 transition-transform duration-300 chrome bg-clip-text font-normal">ṢỌ́LÁ</a>
       <ul className="relative hidden md:flex gap-12 list-none items-center">
-        {['VIDEOS', 'PRESS', 'LIVE', 'CONTACT', 'ABOUT'].map((item) => (
-          <li key={item}>
-            <a
-              href={`#${item.toLowerCase() === 'about' ? 'world' : item.toLowerCase() === 'contact' ? 'newsletter' : item.toLowerCase()}`}
-              className="font-display text-[0.55rem] tracking-[0.3em] text-baby-blue hover:text-white transition-all duration-300 uppercase animate-pulse-slow font-normal"
-            >
-              {item}
-            </a>
-          </li>
-        ))}
+        {['VIDEOS', 'PRESS & LIVE', 'CONTACT', 'ABOUT'].map((item) => {
+          let hrefVal = item.toLowerCase();
+          if (hrefVal === 'about') hrefVal = 'world';
+          else if (hrefVal === 'contact') hrefVal = 'newsletter';
+          else if (hrefVal.includes('press') || hrefVal.includes('live')) hrefVal = 'press';
+
+          return (
+            <li key={item}>
+              <a
+                href={`#${hrefVal}`}
+                className="font-display text-[0.55rem] tracking-[0.3em] text-baby-blue hover:text-white transition-all duration-300 uppercase animate-pulse-slow font-normal"
+              >
+                {item}
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
@@ -242,9 +297,8 @@ const Hero = () => {
         {[
           { id: 'world', label: 'WORLD', size: 320, color: 'bg-amber shadow-[0_0_12px_var(--color-amber)]' },
           { id: 'videos', label: 'VIDEOS', size: 420, color: 'bg-teal shadow-[0_0_16px_var(--color-teal)]' },
-          { id: 'press', label: 'PRESS', size: 520, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
-          { id: 'live', label: 'LIVE', size: 620, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
-          { id: 'newsletter', label: 'NEWSLETTER', size: 720, color: 'bg-baby-blue shadow-[0_0_15px_rgba(137,207,240,0.6)]' },
+          { id: 'press', label: 'PRESS & LIVE', size: 520, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
+          { id: 'newsletter', label: 'NEWSLETTER', size: 620, color: 'bg-baby-blue shadow-[0_0_15px_rgba(137,207,240,0.6)]' },
         ].map((orbit, i) => {
           const radius = orbit.size / 2;
           const startRotation = i * (360 / 8);
@@ -322,26 +376,56 @@ const Hero = () => {
 
 const About = () => {
   return (
-    <section id="world" className="snap-start h-screen px-8 pt-32 pb-4 flex flex-col justify-between overflow-hidden relative">
+    <section id="world" className="snap-start h-screen px-4 sm:px-8 py-8 sm:py-12 md:py-16 flex flex-col justify-center overflow-hidden relative">
       <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col justify-center">
-        <div className="font-display text-[0.45rem] tracking-[0.5em] text-baby-blue mb-8 flex items-center gap-4">
+        <div className="font-display text-[0.4rem] sm:text-[0.45rem] tracking-[0.5em] text-baby-blue mb-4 sm:mb-6 flex items-center gap-4">
           <div className="w-8 h-px bg-baby-blue" />
           01 — The Artist
         </div>
         <div className="max-w-4xl">
           <h2 
             style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
-            className="text-2xl md:text-3xl mb-8 lowercase tracking-[0.25em] chrome inline-block"
+            className="text-xl md:text-2xl mb-4 sm:mb-6 lowercase tracking-[0.25em] chrome inline-block"
           >
             about
           </h2>
-          <div className="space-y-6 text-frost font-display text-[0.58rem] md:text-[0.7rem] font-normal tracking-[0.28em] leading-[1.8] uppercase">
+          <div className="space-y-3 sm:space-y-4 text-frost font-display text-[0.58rem] sm:text-[0.64rem] md:text-[0.72rem] font-normal tracking-[0.2em] leading-[1.8] uppercase">
             <p className="indent-12 md:indent-24">
-              South London polymath Ṣọ́lá reimagines the formal structures of classical music through an avant-garde, Black British lens. A producer, singer, and multi-instrumentalist, she dismantles her classical piano background to build something entirely her own: a sound rooted in the heavy atmosphere of trip-hop, electronic R&B, and jazz noir.
+              South London's Sola Reimagines the formal structures of classical music through an avant-garde, Black British lens. A multi-instrumentalist, producer, and composer, she dismantles her classical training to build a sound entirely on her own terms: heavy, atmospheric, somewhere between trip-hop, electronic R&B, and jazz.
             </p>
             <p>
-              Following her 2023 mixtape Warped Soul and a "One to Watch" nod from The Guardian, Ṣọ́lá's artistry has earned the respect of both legends and the new vanguard. Her work has caught the attention of Elton John and Doechii, and led to collaborations with Kid Cudi and Jeymes Samuel on The Book of Clarence soundtrack. Her versatility as a performer is equally notable, having been hand-picked to open for Sabrina Carpenter, proving her ability to translate an experimental, moody sound to major stages.
+              Her 2023 mixtape Warped Soul earned a "One to Watch" nod from The Guardian. She's since received cosigns from Elton John and Doechii, contributed to Jeymes Samuel's The Book of Clarence soundtrack, and been hand-picked to open for Sabrina Carpenter, showing her experimental sound can translate to both the underground and major stages.
             </p>
+          </div>
+
+          <div className="mt-6 md:mt-8">
+            <h3 
+              style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
+              className="text-[0.65rem] sm:text-[0.75rem] md:text-[0.85rem] mb-2 sm:mb-3 lowercase tracking-[0.25em] chrome inline-block"
+            >
+              sync, score & composition
+            </h3>
+            <div className="space-y-1.5 sm:space-y-2 text-frost font-display text-[0.52rem] sm:text-[0.56rem] md:text-[0.62rem] font-normal tracking-[0.22em] leading-[1.6] uppercase">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-baby-blue/50 select-none">•</span>
+                <p><span className="text-baby-blue font-semibold">No Reproductive Justice, No Peace</span> <span className="text-frost/75">| Dir. Nadira Jamerson & Arieanne Evans | Original Score</span></p>
+              </div>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-baby-blue/50 select-none">•</span>
+                <p><span className="text-baby-blue font-semibold">The Book of Clarence Soundtrack</span> <span className="text-frost/75">| Dir. Jeymes Samuel | Featured Vocalist</span></p>
+              </div>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-baby-blue/50 select-none">•</span>
+                <p><span className="text-baby-blue font-semibold">Hello Happiness</span> <span className="text-frost/75">| Prod. The Wellcome Collection | Original Score</span></p>
+              </div>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-baby-blue/50 select-none">•</span>
+                <p><span className="text-baby-blue font-semibold">Between The Lines Podcast</span> <span className="text-frost/75">| Jamz Supernova | Original Score</span></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 md:mt-10">
+            <SocialLinks className="flex items-center gap-6" iconSize={18} />
           </div>
         </div>
       </div>
@@ -427,17 +511,17 @@ const SolarSystemDivider = () => {
   );
 };
 
-const Press = () => {
+const PressAndLive = () => {
   const articles = [
     { 
       source: 'The Guardian', 
-      title: 'One to Watch: Ṣọ́lá | Music', 
+      title: 'One to Watch: Sola | Music', 
       date: 'Sep 2023',
       url: 'https://www.theguardian.com/music/2023/sep/23/one-to-watch-sola-warped-soul'
     },
     { 
       source: 'Clash Magazine', 
-      title: "Ṣọ́lá's Warped Soul Salutes The Tapestry Of Black British Creativity", 
+      title: "Sola's Warped Soul Salutes The Tapestry Of Black British Creativity", 
       date: 'Nov 2023',
       url: 'https://www.clashmusic.com/news/solas-warped-soul-salutes-the-tapestry-of-black-british-creativity/'
     },
@@ -449,31 +533,103 @@ const Press = () => {
     },
   ];
 
+  const tourDates = [
+    { 
+      date: 'Apr 02 2025', 
+      city: 'London', 
+      venue: 'Southbank Centre', 
+      status: 'Archive', 
+      planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', size: 'w-4 h-4', glow: 'shadow-[0_0_8px_rgba(181,161,150,0.3)]' }
+    },
+    { 
+      date: 'Jul 23 2025', 
+      city: 'Sardinia', 
+      venue: 'Polifonic Festival', 
+      status: 'Tickets', 
+      planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', size: 'w-6 h-6', glow: 'shadow-[0_0_12px_rgba(240,192,128,0.3)]' }
+    },
+  ];
+
   return (
-    <div className="flex-1 flex flex-col justify-center py-12 relative">
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
+    <div className="flex-1 flex flex-col justify-center py-6 sm:py-8 md:py-12 relative max-w-6xl mx-auto w-full">
+      <div className="font-display text-[0.4rem] sm:text-[0.45rem] tracking-[0.5em] text-baby-blue mb-6 sm:mb-8 flex items-center gap-4">
         <div className="w-8 h-px bg-baby-blue" />
-        03 — Press Archive
+        03 — Press & Live
       </div>
-      <div className="max-w-4xl mx-auto w-full space-y-12">
-        {articles.map((article, i) => (
-          <motion.a
-            key={i}
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ x: 10 }}
-            className="group block border-b border-glow/5 pb-10 transition-all hover:border-glow/20"
+
+      <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 max-w-4xl">
+        {/* Press Column */}
+        <div className="space-y-3 md:space-y-4">
+          <h3 
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
+            className="text-[0.65rem] sm:text-[0.75rem] md:text-[0.85rem] mb-2 sm:mb-3 lowercase tracking-[0.25em] chrome inline-block"
           >
-            <div className="flex justify-between items-end mb-4">
-              <span className="font-display text-[0.45rem] tracking-[0.4em] text-baby-blue uppercase">{article.source}</span>
-              <span className="font-display text-[0.4rem] tracking-[0.2em] text-baby-blue/50 uppercase">{article.date}</span>
-            </div>
-            <h3 className="font-display text-[0.6rem] md:text-[0.8rem] text-frost uppercase tracking-[0.25em] leading-relaxed">
-              {article.title}
-            </h3>
-          </motion.a>
-        ))}
+            press
+          </h3>
+          <div className="space-y-1.5 sm:space-y-2 text-frost font-display text-[0.52rem] sm:text-[0.56rem] md:text-[0.62rem] font-normal tracking-[0.22em] leading-[1.6] uppercase">
+            {articles.map((article, i) => (
+              <motion.a
+                key={i}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ x: 4 }}
+                className="flex items-start gap-2 sm:gap-3 group cursor-pointer"
+              >
+                <span className="text-baby-blue/50 select-none group-hover:text-baby-blue transition-colors">•</span>
+                <p className="flex-1">
+                  <span className="text-baby-blue font-semibold group-hover:text-white transition-colors">{article.source}</span>
+                  <span className="text-frost/75"> — </span>
+                  <span className="text-frost group-hover:text-glow transition-colors">{article.title}</span>
+                </p>
+              </motion.a>
+            ))}
+          </div>
+        </div>
+
+        {/* Live Column */}
+        <div className="space-y-3 md:space-y-4">
+          <h3 
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 300, fontStyle: 'italic' }} 
+            className="text-[0.65rem] sm:text-[0.75rem] md:text-[0.85rem] mb-2 sm:mb-3 lowercase tracking-[0.25em] chrome inline-block"
+          >
+            live
+          </h3>
+          <div className="space-y-1.5 sm:space-y-2 text-frost font-display text-[0.52rem] sm:text-[0.56rem] md:text-[0.62rem] font-normal tracking-[0.22em] leading-[1.6] uppercase">
+            {tourDates.map((item, i) => {
+              const isTickets = item.status === 'Tickets';
+              return (
+                <div key={i} className="flex items-start gap-2 sm:gap-3 group">
+                  <span className="text-baby-blue/50 select-none">•</span>
+                  <div className="flex-1 flex justify-between items-center gap-4">
+                    <p>
+                      <span className="text-baby-blue font-semibold">{item.venue}</span>
+                      <span className="text-frost/75"> ({item.city}) — </span>
+                      <span className="text-frost">{item.date}</span>
+                    </p>
+                    {isTickets ? (
+                      <a 
+                        href="https://www.southbankcentre.co.uk"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 text-[0.4rem] sm:text-[0.45rem] tracking-[0.15em] px-2.5 py-0.5 border border-teal text-teal hover:bg-teal hover:text-void transition-all font-bold uppercase rounded-sm"
+                      >
+                        Tickets
+                      </a>
+                    ) : (
+                      <span className="shrink-0 text-[0.4rem] sm:text-[0.45rem] tracking-[0.15em] px-2.5 py-0.5 border border-glow/15 text-glow/30 uppercase rounded-sm select-none">
+                        {item.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="mt-8 md:mt-10">
+        <SocialLinks className="flex items-center gap-6" iconSize={18} />
       </div>
     </div>
   );
@@ -487,16 +643,56 @@ const Pictures = () => {
   
   const videoPlanets = [
     { id: 'a9gT8ZvrxfA', title: 'Slow Dance', name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', size: 'w-[12px] h-[12px]' },
-    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[16px] h-[16px]' },
     { id: 'x6Cm5y105Ec', title: "What's Your Desire?", name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', size: 'w-[18px] h-[18px]' },
+    { id: 'Xhr_CGgt5Jc', title: 'Pink Elephants', name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', size: 'w-[16px] h-[16px]' },
     { id: 'AEWZQAUKkCE', title: 'Nightingale (Live)', name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', size: 'w-[14px] h-[14px]' },
     { id: 'mfsE2gXhvZo', title: 'Heat', name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', size: 'w-[26px] h-[26px]' },
-    { id: '-3rzTxmZJWU', title: 'Scream999', name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', glow: 'shadow-[0_0_15px_rgba(240,216,128,0.2)]', size: 'w-[22px] h-[22px]', hasRing: true, ringColor: 'border-glow/20' },
-    { id: 'HE-l10iYH78', title: 'Abide In U', name: 'Uranus', color: 'bg-[radial-gradient(circle_at_35%_35%,#80e0f0,#2080a0)]', glow: 'shadow-[0_0_12px_rgba(128,224,240,0.2)]', size: 'w-[18px] h-[18px]', hasRing: true, ringColor: 'border-glow/10', ringRotate: 'rotate-[85deg]' },
-    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[18px] h-[18px]' },
-    { id: 'VfJX0EocKkI', title: 'Feels Like A War', name: 'Pluto', color: 'bg-[radial-gradient(circle_at_35%_35%,#a6a6a6,#404040)]', glow: 'shadow-[0_0_8px_rgba(166,166,166,0.2)]', size: 'w-[10px] h-[10px]' }
+    { id: 'eoJ3jxX4yWE', title: "You Don't Have To Say", name: 'Neptune', color: 'bg-[radial-gradient(circle_at_35%_35%,#6080f0,#102060)]', glow: 'shadow-[0_0_15px_rgba(96,128,240,0.3)]', size: 'w-[18px] h-[18px]' }
   ];
  
+  // Center Slow Dance on mount
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    const centerTarget = () => {
+      const innerContainer = scrollContainer.firstElementChild;
+      if (!innerContainer) return false;
+
+      const children = Array.from(innerContainer.children);
+      const targetIndex = videoPlanets.length;
+      const targetChild = children[targetIndex] as HTMLElement;
+
+      if (targetChild) {
+        const containerWidth = scrollContainer.getBoundingClientRect().width;
+        if (containerWidth === 0) return false; // Container not laid out yet
+
+        const childOffsetLeft = targetChild.offsetLeft;
+        const childWidth = targetChild.offsetWidth;
+
+        const targetScrollLeft = childOffsetLeft - (containerWidth / 2) + (childWidth / 2);
+        scrollContainer.scrollLeft = targetScrollLeft;
+        scrollPosRef.current = targetScrollLeft;
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately
+    if (centerTarget()) return;
+
+    // Retry on layout/poll
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (centerTarget() || attempts > 30) {
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [videoPlanets.length]);
+
   // Auto-scroll logic for Horizontal list - EVEN SLOWER & SMOOTH
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -505,7 +701,7 @@ const Pictures = () => {
     let animationFrameId: number;
     const scroll = () => {
       if (!isHovered) {
-        scrollPosRef.current += 0.25; // Slower controlled drift
+        scrollPosRef.current += 0.12; // Slower controlled drift
         scrollContainer.scrollLeft = Math.floor(scrollPosRef.current);
         
         if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
@@ -563,21 +759,18 @@ const Pictures = () => {
         </div>
       </div>
 
-      {/* Horizontal Planet Navigation at the bottom */}
+      {/* Horizontal Video Thumbnail Navigation at the bottom */}
       <div 
          ref={scrollRef}
          onMouseEnter={() => setIsHovered(true)}
          onMouseLeave={() => setIsHovered(false)}
-         className="w-full relative flex items-center overflow-x-auto no-scrollbar shrink-0 mt-4 mb-2 h-[120px]"
+         className="w-full relative flex items-center overflow-x-auto no-scrollbar shrink-0 mt-4 mb-2 h-[140px]"
          style={{
            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
          }}
       >
-        <div className="flex items-start gap-4 md:gap-6 px-12 relative min-h-[100px] pt-4">
-          {/* Continuous Thread Orbit Track */}
-          <div className="absolute left-0 right-0 top-[40px] h-[1px] bg-gradient-to-r from-transparent via-glow/25 to-transparent z-0 pointer-events-none" />
-
+        <div className="flex items-start gap-4 md:gap-6 px-12 relative min-h-[110px] pt-1">
           {[...videoPlanets, ...videoPlanets].map((p, i) => {
             const isActualVideo = i % videoPlanets.length;
             const isActive = activeIndex === isActualVideo;
@@ -586,27 +779,31 @@ const Pictures = () => {
               <div key={`${p.id}-${i}`} className="flex flex-col items-center shrink-0 relative">
                 <motion.button
                   onClick={() => setActiveIndex(isActualVideo)}
-                  whileHover={{ scale: 1.08, y: -2 }}
-                  className={`relative z-10 flex flex-col items-center gap-2.5 transition-all duration-500 cursor-pointer px-4 hover:opacity-100 ${
-                    isActive ? 'opacity-100 scale-102' : 'opacity-70 grayscale-[0.1]'
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className={`relative z-10 flex flex-col items-start gap-2 transition-all duration-500 cursor-pointer w-40 md:w-44 ${
+                    isActive ? 'opacity-100' : 'opacity-40 hover:opacity-80'
                   }`}
                 >
-                  <div className="relative flex items-center justify-center h-12 w-12 shrink-0">
-                    <div className={`rounded-full transition-all duration-700 ${p.size} ${p.color} ${p.glow} ${
-                      isActive ? 'ring-1 ring-glow ring-offset-2 ring-offset-void shadow-[0_0_20px_rgba(200,184,255,0.4)] bg-blend-screen' : ''
-                    }`} />
-                    {p.hasRing && (
-                      <div className={`absolute w-[180%] h-[30%] border ${p.ringColor || 'border-glow/30'} rounded-[100%] ${(p as any).ringRotate || 'rotate-[-25deg]'} z-0`} />
-                    )}
+                  <div className={`relative aspect-video w-full overflow-hidden rounded border transition-all duration-500 ${
+                    isActive ? 'border-glow shadow-[0_0_15px_rgba(200,184,255,0.25)]' : 'border-frost/10'
+                  }`}>
+                    {/* Real YouTube Thumbnail */}
+                    <img 
+                      src={`https://img.youtube.com/vi/${p.id}/mqdefault.jpg`} 
+                      alt={p.title}
+                      className={`w-full h-full object-cover transition-all duration-500 ${
+                        isActive ? 'scale-105 filter-none' : 'filter grayscale'
+                      }`}
+                      referrerPolicy="no-referrer"
+                    />
+                    {/* Overlay Sequence Number */}
+                    <div className="absolute top-1.5 left-1.5 bg-void/80 backdrop-blur-sm px-1 py-0.5 rounded-[1px] font-mono text-[0.4rem] tracking-wider text-baby-blue">
+                      {String(isActualVideo + 1).padStart(2, '0')}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className={`font-display text-[0.52rem] md:text-[0.58rem] tracking-[0.3em] uppercase text-center leading-none transition-all duration-500 font-bold ${
-                      isActive ? 'text-glow text-shadow-glow' : 'text-frost/80'
-                    }`}>
-                      {p.name}
-                    </span>
-                    <span className={`font-display text-[0.42rem] md:text-[0.46rem] tracking-[0.12em] uppercase text-center block max-w-[90px] truncate leading-tight transition-all duration-500 font-semibold ${
-                      isActive ? 'text-frost' : 'text-frost/40'
+                  <div className="flex flex-col items-start gap-0.5 w-full pl-0.5">
+                    <span className={`font-display text-[0.45rem] tracking-[0.2em] uppercase truncate w-full text-left transition-all duration-500 font-bold ${
+                      isActive ? 'text-glow' : 'text-frost/85'
                     }`}>
                       {p.title}
                     </span>
@@ -621,59 +818,7 @@ const Pictures = () => {
   );
 };
 
-const Tour = () => {
-  const tourDates = [
-    { 
-      date: 'Apr 02 2025', 
-      city: 'London', 
-      venue: 'Southbank Centre', 
-      status: 'Archive', 
-      planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', size: 'w-4 h-4', glow: 'shadow-[0_0_8px_rgba(181,161,150,0.3)]' }
-    },
-    { 
-      date: 'Jul 23 2025', 
-      city: 'Sardinia', 
-      venue: 'Polifonic Festival', 
-      status: 'Tickets', 
-      planet: { color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', size: 'w-6 h-6', glow: 'shadow-[0_0_12px_rgba(240,192,128,0.3)]' }
-    },
-  ];
 
-  return (
-    <div className="flex-1 flex flex-col justify-center py-12 relative">
-      <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-16 flex items-center gap-4">
-        <div className="w-8 h-px bg-baby-blue" />
-        04 — Live
-      </div>
-
-      <div className="max-w-4xl mx-auto w-full flex flex-col gap-12">
-        {tourDates.map((item, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ x: 10 }}
-            className="group grid grid-cols-[1fr_auto] gap-8 items-center border-b border-glow/5 pb-12 transition-all hover:border-glow/20"
-          >
-            {/* Info */}
-            <div className="flex flex-col gap-2">
-              <span className="font-display text-[0.45rem] tracking-[0.4em] text-baby-blue uppercase">{item.date}</span>
-              <h3 className="font-display text-[0.7rem] md:text-[0.85rem] text-frost uppercase tracking-[0.25em] leading-relaxed">
-                {item.city} — {item.venue}
-              </h3>
-            </div>
-
-            {/* Status */}
-            <div className={`font-display text-[0.45rem] tracking-[0.3em] px-6 py-2 border transition-colors ${
-              item.status === 'Tickets' ? 'border-teal text-teal hover:bg-teal hover:text-void cursor-pointer' :
-              'border-glow/20 text-glow/30 cursor-default'
-            }`}>
-              {item.status}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -867,51 +1012,9 @@ const Footer = ({ onOpenAdmin }: { onOpenAdmin?: () => void }) => {
         onClick={handleClick}
         className="font-display text-[0.45rem] tracking-[0.3em] text-[#89CFF0] hover:text-[#c8b8ff] transition-colors uppercase cursor-pointer select-none"
       >
-        © 2025 Ṣọ́lá. All rights reserved. {clickCount > 0 && clickCount < 5 && `(${clickCount})`}
+        © 2025 Sola. All rights reserved. {clickCount > 0 && clickCount < 5 && `(${clickCount})`}
       </p>
     </footer>
-  );
-};
-
-const SocialLinks = ({ className = "absolute bottom-8 right-8 z-[100] flex items-center gap-6" }: { className?: string }) => {
-  const socials = [
-    { id: 'instagram', icon: <Instagram size={14} />, url: 'https://www.instagram.com/thisissola/' },
-    { id: 'tiktok', icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-      </svg>
-    ), url: 'https://www.tiktok.com/@thisissola' },
-    { id: 'youtube', icon: <Youtube size={14} />, url: 'http://youtube.com/@thisissola' },
-    { id: 'spotify', icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M8 14.5c2.5-1 5.5-1 8 0" />
-        <path d="M7 11.5c3.5-1.5 7-1.5 10.5 0" />
-        <path d="M7 8.5c4-2 8-2 12 0" />
-      </svg>
-    ), url: 'https://open.spotify.com/artist/1Bfk5r6g6fXLaMoESYbePK' },
-    { id: 'x', icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ), url: 'https://x.com/thisissola' },
-  ];
-
-  return (
-    <div className={className}>
-      {socials.map((social) => (
-        <motion.a
-          key={social.id}
-          href={social.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          whileHover={{ y: -4, color: 'var(--color-baby-blue)' }}
-          className="text-baby-blue/40 hover:text-baby-blue transition-colors duration-300"
-        >
-          {social.icon}
-        </motion.a>
-      ))}
-    </div>
   );
 };
 
@@ -1181,11 +1284,8 @@ export default function App() {
           <section id="videos" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
             <Pictures />
           </section>
-          <section id="press" className="snap-start h-screen px-8 flex flex-col justify-center overflow-hidden">
-            <Press />
-          </section>
-          <section id="live" className="snap-start h-screen px-8 flex flex-col justify-center overflow-hidden">
-            <Tour />
+          <section id="press" className="snap-start h-screen px-4 sm:px-8 flex flex-col justify-center overflow-hidden">
+            <PressAndLive />
           </section>
           <section id="newsletter" className="snap-start h-screen px-8 flex flex-col justify-between bg-void/30 backdrop-blur-sm overflow-hidden relative">
             <Newsletter />
