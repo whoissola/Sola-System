@@ -32,34 +32,71 @@ const Starfield = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let stars: { x: number; y: number; z: number; r: number; o: number; pulse: number; colorBase: string }[] = [];
+    const BEAM_COUNT = 15; // Sparse, high-performance composition
+    let beams: { 
+      x: number; 
+      y: number; 
+      z: number; 
+      r: number; 
+      length: number;
+      o: number; 
+      pulse: number; 
+      baseHue: number;
+      saturation: number;
+      lightness: number;
+    }[] = [];
+
+    const wrap3D = (val: number, range: number) => {
+      const half = range / 2;
+      let wrapped = ((val + half) % range);
+      if (wrapped < 0) wrapped += range;
+      return wrapped - half;
+    };
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      createStars();
+      createBeams();
     };
 
-    const createStars = () => {
-      stars = [];
-      const count = Math.floor((canvas.width * canvas.height) / 2500); // More spaced out
-      for (let i = 0; i < count; i++) {
+    const createBeams = () => {
+      beams = [];
+      for (let i = 0; i < BEAM_COUNT; i++) {
         const colRand = Math.random();
-        let colorBase = 'rgba(255, 255, 255, '; // white
-        if (colRand < 0.45) {
-          colorBase = 'rgba(137, 207, 240, '; // icy baby-blue
-        } else if (colRand < 0.8) {
-          colorBase = 'rgba(200, 184, 255, '; // lilac
+        let baseHue = 0;
+        let saturation = 100;
+        let lightness = 100;
+
+        if (colRand < 0.35) {
+          baseHue = 200; // icy baby-blue
+          saturation = 90;
+          lightness = 80;
+        } else if (colRand < 0.7) {
+          baseHue = 270; // lilac / cosmic violet
+          saturation = 95;
+          lightness = 85;
+        } else {
+          baseHue = 345; // cosmic coral / rose
+          saturation = 95;
+          lightness = 85;
         }
 
-        stars.push({
-          x: (Math.random() - 0.5) * 3000,
-          y: (Math.random() - 0.5) * 3000,
-          z: Math.random() * 1000 + 1,
-          r: Math.random() * 1.5 + 0.4,
-          o: Math.random() * 0.7 + 0.3,
+        // Sector-based distribution ensures perfect equal spacing, preventing clumping
+        const sectorAngle = (i / BEAM_COUNT) * Math.PI * 2;
+        const angle = sectorAngle + (Math.random() - 0.5) * 0.3;
+        const radius = Math.random() * 800 + 400; // Evenly spaced radius around center
+
+        beams.push({
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          z: (i / BEAM_COUNT) * 1000 + 1, // Equally distributed depth
+          r: Math.random() * 1.1 + 0.35,
+          length: Math.random() * 25 + 15,
+          o: Math.random() * 0.45 + 0.35,
           pulse: Math.random() * Math.PI * 2,
-          colorBase
+          baseHue,
+          saturation,
+          lightness,
         });
       }
     };
@@ -67,7 +104,12 @@ const Starfield = () => {
     const scrollYRef = { current: 0 };
 
     const handleScroll = () => {
-      scrollYRef.current = window.scrollY;
+      const main = document.querySelector('main');
+      if (main) {
+        scrollYRef.current = main.scrollTop;
+      } else {
+        scrollYRef.current = window.scrollY;
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -82,79 +124,184 @@ const Starfield = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Subtle nebula glow
-      const time = Date.now() * 0.0002;
-      const nebulaX = canvas.width / 2 + Math.cos(time) * 100;
-      const nebulaY = canvas.height / 2 + Math.sin(time * 0.7) * 100;
-      const nebulaGradient = ctx.createRadialGradient(nebulaX, nebulaY, 0, nebulaX, nebulaY, canvas.width * 0.7);
+      const time = Date.now() * 0.00015;
+      const nebulaX = canvas.width / 2 + Math.cos(time) * 80;
+      const nebulaY = canvas.height / 2 + Math.sin(time * 0.7) * 80;
+      const nebulaGradient = ctx.createRadialGradient(nebulaX, nebulaY, 0, nebulaX, nebulaY, canvas.width * 0.6);
       nebulaGradient.addColorStop(0, 'rgba(30, 15, 60, 0.12)');
       nebulaGradient.addColorStop(0.5, 'rgba(15, 8, 40, 0.04)');
       nebulaGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = nebulaGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Mouse look angles (yaw/pitch)
-      const mouseYaw = mouseRef.current.x * 0.4;
-      const mousePitch = mouseRef.current.y * 0.4;
+      // Gently scale opacity from 0.7 to 1.0 based on scroll, so they are always visible on the Hero page but feel deeper when scrolling down.
+      const landingFade = Math.min(1.0, 0.7 + (scrollYRef.current / (window.innerHeight || 1)) * 0.3);
+
+      // Subtle mouse look rotation to give depth feel
+      const mouseYaw = mouseRef.current.x * 0.35;
+      const mousePitch = mouseRef.current.y * 0.35;
       
       const cosY = Math.cos(mouseYaw);
       const sinY = Math.sin(mouseYaw);
       const cosX = Math.cos(mousePitch);
       const sinX = Math.sin(mousePitch);
 
-      stars.forEach((s) => {
-        // Slow movement forward along Z
-        s.z -= 0.6;
+      // Synchronized holographic cosmic stutter rhythm
+      const globalGlitch = Math.random() < 0.035;
+      const glitchX = globalGlitch ? (Math.random() - 0.5) * 15 : 0;
+      const glitchY = globalGlitch ? (Math.random() - 0.5) * 15 : 0;
+      const glitchHue = globalGlitch ? (Math.random() - 0.5) * 65 : 0;
 
-        // Wrap around depth
-        if (s.z <= 0) {
-          s.z = 1000;
-          s.x = (Math.random() - 0.5) * 3000;
-          s.y = (Math.random() - 0.5) * 3000;
+      beams.forEach((b) => {
+        // Slowly fly forward along Z
+        b.z -= 0.65;
+
+        // Wrap depth smoothly
+        if (b.z <= 0) {
+          b.z = 1000;
+          const idx = beams.indexOf(b);
+          const sectorAngle = (idx / BEAM_COUNT) * Math.PI * 2;
+          const angle = sectorAngle + (Math.random() - 0.5) * 0.3;
+          const radius = Math.random() * 800 + 400;
+          b.x = Math.cos(angle) * radius;
+          b.y = Math.sin(angle) * radius;
         }
 
-        // Apply interactive 3D rotation based on mouse orientation
-        // Spin around Y axis (Yaw)
-        let rx = s.x * cosY - s.z * sinY;
-        let rz = s.x * sinY + s.z * cosY;
+        // Relate coordinate to the current scroll position.
+        const scrollShift = scrollYRef.current * 0.5;
+        let ry = b.y + scrollShift;
+        ry = wrap3D(ry, 3000);
 
-        // Spin around X axis (Pitch)
-        let ry = s.y * cosX - rz * sinX;
-        rz = s.y * sinX + rz * cosX;
+        // 3D Rotations of Head
+        let rx = b.x * cosY - b.z * sinY;
+        let rz = b.x * sinY + b.z * cosY;
+        let ryRot = ry * cosX - rz * sinX;
+        rz = ry * sinX + rz * cosX;
 
-        // Perspective scaling
-        const fov = 600;
+        // 3D Perspective Projection of Head
+        const fov = 650;
         const scale = fov / (fov + rz);
-
-        // Calculate screen positions
         const screenX = canvas.width / 2 + rx * scale;
-        // Shift stars vertically based on scroll offset & depth factors
-        const scrollFactor = scrollYRef.current * 0.15 * (1.5 - rz / 1000);
-        const screenY = canvas.height / 2 + ry * scale - scrollFactor;
+        const screenY = canvas.height / 2 + ryRot * scale;
 
-        const size = s.r * scale * 1.25;
+        // 3D Rotations of Tail (along the Z vector for perfect alignment)
+        const tailZ = b.z + b.length;
+        let rxt = b.x * cosY - tailZ * sinY;
+        let rzt = b.x * sinY + tailZ * cosY;
+        let ryt = ry * cosX - rzt * sinX;
+        rzt = ry * sinX + rzt * cosX;
 
-        if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
-          s.pulse += 0.01;
-          const opacity = s.o * (0.6 + 0.4 * Math.sin(s.pulse)) * (1.0 - rz / 1200);
+        // 3D Perspective Projection of Tail
+        const scaleT = fov / (fov + rzt);
+        const tailScreenX = canvas.width / 2 + rxt * scaleT;
+        const tailScreenY = canvas.height / 2 + ryt * scaleT;
 
-          ctx.beginPath();
-          ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-          ctx.fillStyle = `${s.colorBase}${opacity})`;
-          ctx.fill();
+        // Only draw beams within viewport bounds (including generous safety margins)
+        if (screenX >= -400 && screenX <= canvas.width + 400 && screenY >= -200 && screenY <= canvas.height + 200) {
+          b.pulse += 0.012; // slow elegant breathing speed
+
+          // Compute opacity based on breathing pulse, Z depth, and scroll fade
+          const opacity = Math.max(0, Math.min(1, b.o * (0.65 + 0.35 * Math.sin(b.pulse)) * (1.0 - rz / 1200) * landingFade));
+
+          if (opacity > 0.01) {
+            const currentHue = (b.baseHue + (Date.now() * 0.012) + glitchHue + 360) % 360;
+            const colorStr = `hsla(${currentHue}, ${b.saturation}%, ${b.lightness}%, `;
+
+            // Apply positions with synchronized glitch offsets
+            const drawStartX = tailScreenX + glitchX;
+            const drawStartY = tailScreenY + glitchY;
+            const drawEndX = screenX + glitchX;
+            const drawEndY = screenY + glitchY;
+
+            // Core size
+            const displaySize = b.r * scale;
+
+            ctx.save();
+
+            // 1. Draw glowing background/blur (horizontal smear/scattering)
+            // To create horizontal scattering on diagonal lines, we draw faint parallel lines offset horizontally
+            ctx.lineWidth = Math.max(1.0, displaySize * 0.45);
+            ctx.lineCap = 'round';
+
+            // Splay out horizontal glow lines
+            for (let offset = -8; offset <= 8; offset += 4) {
+              if (offset === 0) continue;
+              const weight = Math.exp(-(offset * offset) / 32);
+              ctx.beginPath();
+              ctx.moveTo(drawStartX + offset, drawStartY);
+              ctx.lineTo(drawEndX + offset, drawEndY);
+              ctx.strokeStyle = `${colorStr}${opacity * 0.18 * weight})`;
+              ctx.stroke();
+            }
+
+            // 2. Draw high-end linear gradient core (bright white center fading to neon edges)
+            const gradient = ctx.createLinearGradient(drawStartX, drawStartY, drawEndX, drawEndY);
+            gradient.addColorStop(0, `${colorStr}0)`);
+            gradient.addColorStop(0.2, `${colorStr}${opacity * 0.45})`);
+            gradient.addColorStop(0.5, `hsla(0, 0%, 100%, ${opacity * 0.95})`); // Super bright core
+            gradient.addColorStop(0.8, `${colorStr}${opacity * 0.45})`);
+            gradient.addColorStop(1, `${colorStr}0)`);
+
+            ctx.beginPath();
+            ctx.moveTo(drawStartX, drawStartY);
+            ctx.lineTo(drawEndX, drawEndY);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = Math.max(1.5, displaySize * 0.9);
+            ctx.stroke();
+
+            // 3. Subtle horizontal lens flare across core head for bright/close beams
+            if (b.r > 0.65 && opacity > 0.3) {
+              const flareLen = displaySize * 15;
+              const flareGrad = ctx.createLinearGradient(drawEndX - flareLen, drawEndY, drawEndX + flareLen, drawEndY);
+              flareGrad.addColorStop(0, `${colorStr}0)`);
+              flareGrad.addColorStop(0.5, `${colorStr}${opacity * 0.35})`);
+              flareGrad.addColorStop(1, `${colorStr}0)`);
+
+              ctx.beginPath();
+              ctx.moveTo(drawEndX - flareLen, drawEndY);
+              ctx.lineTo(drawEndX + flareLen, drawEndY);
+              ctx.strokeStyle = flareGrad;
+              ctx.lineWidth = 1.0;
+              ctx.stroke();
+            }
+
+            // 4. Double exposure/chromatic glitch shadow during global glitch
+            if (globalGlitch) {
+              ctx.beginPath();
+              ctx.moveTo(drawStartX + 6, drawStartY);
+              ctx.lineTo(drawEndX + 6, drawEndY);
+              ctx.strokeStyle = `hsla(${(currentHue + 120) % 360}, 100%, 75%, ${opacity * 0.4})`;
+              ctx.lineWidth = Math.max(1.0, displaySize * 0.5);
+              ctx.stroke();
+            }
+
+            ctx.restore();
+          }
         }
       });
+
       animationFrameId = requestAnimationFrame(draw);
     };
 
+    const main = document.querySelector('main');
+    if (main) {
+      main.addEventListener('scroll', handleScroll, { passive: true });
+    }
     window.addEventListener('resize', resize);
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    
+    // Initial sizes and trigger
     resize();
+    handleScroll();
     draw();
 
     return () => {
+      if (main) {
+        main.removeEventListener('scroll', handleScroll);
+      }
       window.removeEventListener('resize', resize);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll, { capture: true });
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
@@ -478,7 +625,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
-          className="font-serif italic text-[1.75rem] md:text-[2.75rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(200,184,255,0.4)] chrome-blue-lilac-slow bg-clip-text"
+          className="font-serif italic text-[1.35rem] md:text-[2.1rem] tracking-[0.2em] drop-shadow-[0_0_15px_rgba(200,184,255,0.4)] chrome-blue-lilac-slow bg-clip-text"
         >
           welcome to the sola system
         </motion.h1>
