@@ -147,10 +147,13 @@ const Starfield = () => {
       const sinX = Math.sin(mousePitch);
 
       // Synchronized holographic cosmic stutter rhythm
-      const globalGlitch = Math.random() < 0.035;
-      const glitchX = globalGlitch ? (Math.random() - 0.5) * 15 : 0;
-      const glitchY = globalGlitch ? (Math.random() - 0.5) * 15 : 0;
-      const glitchHue = globalGlitch ? (Math.random() - 0.5) * 65 : 0;
+      const globalGlitch = Math.random() < 0.045;
+      const glitchX = globalGlitch ? (Math.random() - 0.5) * 16 : 0;
+      const glitchY = globalGlitch ? (Math.random() - 0.5) * 16 : 0;
+      const glitchHue = globalGlitch ? (Math.random() - 0.5) * 60 : 0;
+
+      // High-end additive/screen composition to make overlapping glows blend together beautifully!
+      ctx.globalCompositeOperation = 'screen';
 
       beams.forEach((b) => {
         // Slowly fly forward along Z
@@ -161,13 +164,14 @@ const Starfield = () => {
           b.z = 1000;
           const idx = beams.indexOf(b);
           const sectorAngle = (idx / BEAM_COUNT) * Math.PI * 2;
-          const angle = sectorAngle + (Math.random() - 0.5) * 0.3;
+          const angle = sectorAngle + (Math.random() - 0.5) * 0.35;
           const radius = Math.random() * 800 + 400;
           b.x = Math.cos(angle) * radius;
           b.y = Math.sin(angle) * radius;
         }
 
         // Relate coordinate to the current scroll position.
+        // Parallel wrapping is done in 3D coordinate space before projection.
         const scrollShift = scrollYRef.current * 0.5;
         let ry = b.y + scrollShift;
         ry = wrap3D(ry, 3000);
@@ -178,67 +182,66 @@ const Starfield = () => {
         let ryRot = ry * cosX - rz * sinX;
         rz = ry * sinX + rz * cosX;
 
-        // 3D Perspective Projection of Head
+        // 3D Perspective Projection of Head with safety denominator
         const fov = 650;
-        const scale = fov / (fov + rz);
+        const denom = fov + rz;
+        const scale = fov / (denom > 1 ? denom : 1);
+
         const screenX = canvas.width / 2 + rx * scale;
         const screenY = canvas.height / 2 + ryRot * scale;
 
-        // 3D Rotations of Tail (along the Z vector for perfect alignment)
-        const tailZ = b.z + b.length;
-        let rxt = b.x * cosY - tailZ * sinY;
-        let rzt = b.x * sinY + tailZ * cosY;
-        let ryt = ry * cosX - rzt * sinX;
-        rzt = ry * sinX + rzt * cosX;
-
-        // 3D Perspective Projection of Tail
-        const scaleT = fov / (fov + rzt);
-        const tailScreenX = canvas.width / 2 + rxt * scaleT;
-        const tailScreenY = canvas.height / 2 + ryt * scaleT;
-
-        // Only draw beams within viewport bounds (including generous safety margins)
+        // Only draw beams within viewport bounds (with generous safety padding)
         if (screenX >= -400 && screenX <= canvas.width + 400 && screenY >= -200 && screenY <= canvas.height + 200) {
-          b.pulse += 0.012; // slow elegant breathing speed
+          b.pulse += 0.012; // elegant slow breathing speed
 
           // Compute opacity based on breathing pulse, Z depth, and scroll fade
           const opacity = Math.max(0, Math.min(1, b.o * (0.65 + 0.35 * Math.sin(b.pulse)) * (1.0 - rz / 1200) * landingFade));
 
           if (opacity > 0.01) {
-            const currentHue = (b.baseHue + (Date.now() * 0.012) + glitchHue + 360) % 360;
-            const colorStr = `hsla(${currentHue}, ${b.saturation}%, ${b.lightness}%, `;
+            // Calculate radial trajectory vector from screen center outward
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const dx = screenX - centerX;
+            const dy = screenY - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const dirX = dx / dist;
+            const dirY = dy / dist;
 
-            // Apply positions with synchronized glitch offsets
-            const drawStartX = tailScreenX + glitchX;
-            const drawStartY = tailScreenY + glitchY;
+            // Beam length stretches radially as it moves outward (adds depth and hyperspace warp feeling)
+            const beamLen = b.length * scale * (0.45 + dist * 0.001);
+            const drawStartX = screenX - dirX * beamLen + glitchX;
+            const drawStartY = screenY - dirY * beamLen + glitchY;
             const drawEndX = screenX + glitchX;
             const drawEndY = screenY + glitchY;
 
-            // Core size
+            // Safe guard against non-finite values before doing canvas actions
+            if (!isFinite(drawStartX) || !isFinite(drawStartY) || !isFinite(drawEndX) || !isFinite(drawEndY)) {
+              return;
+            }
+
+            const currentHue = (b.baseHue + (Date.now() * 0.015) + glitchHue + 360) % 360;
+            const colorStr = `hsla(${currentHue}, ${b.saturation}%, ${b.lightness}%, `;
+
+            // Beam core/neon thickness
             const displaySize = b.r * scale;
 
             ctx.save();
 
-            // 1. Draw glowing background/blur (horizontal smear/scattering)
-            // To create horizontal scattering on diagonal lines, we draw faint parallel lines offset horizontally
-            ctx.lineWidth = Math.max(1.0, displaySize * 0.45);
+            // 1. Draw elegant outer soft neon glow using multiple wider strokes at low opacity
+            const glowWidth = Math.max(3, displaySize * 6);
             ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(drawStartX, drawStartY);
+            ctx.lineTo(drawEndX, drawEndY);
+            ctx.strokeStyle = `${colorStr}${opacity * 0.22})`;
+            ctx.lineWidth = glowWidth;
+            ctx.stroke();
 
-            // Splay out horizontal glow lines
-            for (let offset = -8; offset <= 8; offset += 4) {
-              if (offset === 0) continue;
-              const weight = Math.exp(-(offset * offset) / 32);
-              ctx.beginPath();
-              ctx.moveTo(drawStartX + offset, drawStartY);
-              ctx.lineTo(drawEndX + offset, drawEndY);
-              ctx.strokeStyle = `${colorStr}${opacity * 0.18 * weight})`;
-              ctx.stroke();
-            }
-
-            // 2. Draw high-end linear gradient core (bright white center fading to neon edges)
+            // 2. High-contrast white/neon core gradient
             const gradient = ctx.createLinearGradient(drawStartX, drawStartY, drawEndX, drawEndY);
             gradient.addColorStop(0, `${colorStr}0)`);
             gradient.addColorStop(0.2, `${colorStr}${opacity * 0.45})`);
-            gradient.addColorStop(0.5, `hsla(0, 0%, 100%, ${opacity * 0.95})`); // Super bright core
+            gradient.addColorStop(0.5, `hsla(0, 0%, 100%, ${opacity * 0.95})`); // brilliant white core center
             gradient.addColorStop(0.8, `${colorStr}${opacity * 0.45})`);
             gradient.addColorStop(1, `${colorStr}0)`);
 
@@ -246,32 +249,16 @@ const Starfield = () => {
             ctx.moveTo(drawStartX, drawStartY);
             ctx.lineTo(drawEndX, drawEndY);
             ctx.strokeStyle = gradient;
-            ctx.lineWidth = Math.max(1.5, displaySize * 0.9);
+            ctx.lineWidth = Math.max(1.5, displaySize * 1.5);
             ctx.stroke();
 
-            // 3. Subtle horizontal lens flare across core head for bright/close beams
-            if (b.r > 0.65 && opacity > 0.3) {
-              const flareLen = displaySize * 15;
-              const flareGrad = ctx.createLinearGradient(drawEndX - flareLen, drawEndY, drawEndX + flareLen, drawEndY);
-              flareGrad.addColorStop(0, `${colorStr}0)`);
-              flareGrad.addColorStop(0.5, `${colorStr}${opacity * 0.35})`);
-              flareGrad.addColorStop(1, `${colorStr}0)`);
-
-              ctx.beginPath();
-              ctx.moveTo(drawEndX - flareLen, drawEndY);
-              ctx.lineTo(drawEndX + flareLen, drawEndY);
-              ctx.strokeStyle = flareGrad;
-              ctx.lineWidth = 1.0;
-              ctx.stroke();
-            }
-
-            // 4. Double exposure/chromatic glitch shadow during global glitch
+            // 3. Chromatic Aberration double exposure/offset shadow on glitch frames
             if (globalGlitch) {
               ctx.beginPath();
               ctx.moveTo(drawStartX + 6, drawStartY);
               ctx.lineTo(drawEndX + 6, drawEndY);
-              ctx.strokeStyle = `hsla(${(currentHue + 120) % 360}, 100%, 75%, ${opacity * 0.4})`;
-              ctx.lineWidth = Math.max(1.0, displaySize * 0.5);
+              ctx.strokeStyle = `hsla(${(currentHue + 120) % 360}, 100%, 75%, ${opacity * 0.45})`;
+              ctx.lineWidth = Math.max(1.2, displaySize * 1.1);
               ctx.stroke();
             }
 
@@ -279,6 +266,9 @@ const Starfield = () => {
           }
         }
       });
+
+      // Restore normal composite operation for subsequent drawing or UI elements
+      ctx.globalCompositeOperation = 'source-over';
 
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -533,7 +523,7 @@ const Navbar = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-void/80 to-transparent pointer-events-none" />
       <a href="#" className="relative font-display text-[0.8rem] tracking-[0.6em] hover:scale-105 transition-transform duration-300 chrome bg-clip-text font-normal">ṢỌ́LÁ</a>
       <ul className="relative hidden md:flex gap-12 list-none items-center">
-        {['VIDEOS', 'PRESS', 'LIVE', 'CONTACT', 'ABOUT'].map((item) => {
+        {['MUSIC', 'PRESS', 'LIVE', 'CONTACT', 'ABOUT'].map((item) => {
           let hrefVal = item.toLowerCase();
           if (hrefVal === 'about') hrefVal = 'world';
           else if (hrefVal === 'contact') hrefVal = 'newsletter';
@@ -569,7 +559,7 @@ const Hero = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
         {[
           { id: 'world', label: 'WORLD', size: 320, color: 'bg-amber shadow-[0_0_12px_var(--color-amber)]' },
-          { id: 'videos', label: 'VIDEOS', size: 410, color: 'bg-teal shadow-[0_0_16px_var(--color-teal)]' },
+          { id: 'music', label: 'MUSIC', size: 410, color: 'bg-teal shadow-[0_0_16px_var(--color-teal)]' },
           { id: 'press', label: 'PRESS', size: 500, color: 'bg-glow shadow-[0_0_14px_var(--color-glow)]' },
           { id: 'live', label: 'LIVE', size: 590, color: 'bg-coral shadow-[0_0_14px_var(--color-coral)]' },
           { id: 'newsletter', label: 'NEWSLETTER', size: 680, color: 'bg-baby-blue shadow-[0_0_15px_rgba(137,207,240,0.6)]' },
@@ -710,8 +700,8 @@ const SolarSystemDivider = () => {
 
   const planets = [
     { name: 'Mercury', color: 'bg-[radial-gradient(circle_at_35%_35%,#b5a196,#5c4038)]', size: 'w-5 h-5', isSun: false, glow: 'shadow-[0_0_10px_rgba(181,161,150,0.3)]', href: '#world' },
-    { name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', size: 'w-7 h-7', isSun: false, glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', href: '#videos' },
-    { name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', size: 'w-8 h-8', isSun: false, glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', href: '#videos' },
+    { name: 'Venus', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0c080,#c08000)]', size: 'w-7 h-7', isSun: false, glow: 'shadow-[0_0_15px_rgba(240,192,128,0.3)]', href: '#music' },
+    { name: 'Earth', color: 'bg-[radial-gradient(circle_at_35%_35%,#4ab0f0,#1a6030)]', size: 'w-8 h-8', isSun: false, glow: 'shadow-[0_0_20px_rgba(74,176,240,0.4)]', href: '#music' },
     { name: 'Mars', color: 'bg-[radial-gradient(circle_at_35%_35%,#e07050,#802020)]', size: 'w-6 h-6', isSun: false, glow: 'shadow-[0_0_12px_rgba(224,112,80,0.3)]', href: '#press' },
     { name: 'Jupiter', color: 'bg-[radial-gradient(circle_at_35%_35%,#e8c090,#a06020)]', size: 'w-14 h-14', isSun: false, glow: 'shadow-[0_0_25px_rgba(232,192,144,0.4)]', href: '#live' },
     { name: 'Saturn', color: 'bg-[radial-gradient(circle_at_35%_35%,#f0d880,#b08030)]', size: 'w-12 h-12', isSun: false, glow: 'shadow-[0_0_20px_rgba(240,216,128,0.3)]', hasRing: true, ringColor: 'border-glow/40', href: '#newsletter' },
@@ -1080,7 +1070,7 @@ const Pictures = ({ isActive, isMuted, volume }: { isActive: boolean; isMuted: b
     <div className="flex-1 flex flex-col h-full pt-4 pb-4 relative justify-between overflow-hidden">
       <div className="font-display text-[0.5rem] tracking-[0.5em] text-baby-blue mb-2 flex items-center gap-4 shrink-0">
         <div className="w-8 h-px bg-baby-blue" />
-        02 — Video Archive
+        02 — Music Archive
       </div>
 
       {/* Featured Video Stage - Maximized Real Estate with mathematically perfect 16:9 proportion */}
@@ -1677,8 +1667,8 @@ export default function App() {
             <Hero />
           </section>
           <About />
-          <section id="videos" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
-            <Pictures isActive={activeSection === "videos"} isMuted={isMuted} volume={volume} />
+          <section id="music" className="snap-start h-screen px-2 sm:px-6 md:px-8 flex flex-col justify-center overflow-hidden pb-2 md:pb-4">
+            <Pictures isActive={activeSection === "music"} isMuted={isMuted} volume={volume} />
           </section>
           <section id="press" className="snap-start h-screen px-4 sm:px-8 flex flex-col justify-center overflow-hidden relative">
             <div id="live" className="absolute top-0 left-0 w-px h-px pointer-events-none opacity-0" />
